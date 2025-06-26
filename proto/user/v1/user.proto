@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  int64 id = 1; // bigint
+  string username = 2;
+  string full_name = 3;
+  string email = 4;
+  string profile_pic_url = 5;
+  bool is_verified = 6;
+  repeated UserTag tags = 7;
+ 
+
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+
+message UserTag {
+  int64 id = 1;
+  int64 user_id = 2;
+  string tag = 3;
+ 
+}
+
