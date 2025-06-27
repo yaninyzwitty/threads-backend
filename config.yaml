@@ -4,4 +4,4 @@ database:
   username: token
   token: token
   path: ./secure-connect.zip
-  keyspace: threads-go-keyspace
+  keyspace: threads_go_keyspace
