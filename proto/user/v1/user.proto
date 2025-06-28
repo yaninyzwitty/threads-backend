@@ -12,10 +12,9 @@ message User {
   string email = 4;
   string profile_pic_url = 5;
   bool is_verified = 6;
-  repeated UserTag tags = 7;
 
-  google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
 }
 
 message UserTag {
@@ -30,11 +29,11 @@ message CreateUserRequest {
   string full_name = 2;
   string email = 3;
   string profile_pic_url = 4;
-  repeated string tags = 5;
 }
 
 message CreateUserResponse {
-  User user = 1;
+  string token = 1;
+  User user = 2;
 }
 
 // === Update ===
@@ -44,7 +43,6 @@ message UpdateUserRequest {
   string full_name = 3;
   string email = 4;
   string profile_pic_url = 5;
-  repeated string tags = 6;
 }
 
 message UpdateUserResponse {
