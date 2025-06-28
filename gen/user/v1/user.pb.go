@@ -30,9 +30,8 @@ type User struct {
 	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
 	ProfilePicUrl string                 `protobuf:"bytes,5,opt,name=profile_pic_url,json=profilePicUrl,proto3" json:"profile_pic_url,omitempty"`
 	IsVerified    bool                   `protobuf:"varint,6,opt,name=is_verified,json=isVerified,proto3" json:"is_verified,omitempty"`
-	Tags          []*UserTag             `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -107,13 +106,6 @@ func (x *User) GetIsVerified() bool {
 		return x.IsVerified
 	}
 	return false
-}
-
-func (x *User) GetTags() []*UserTag {
-	if x != nil {
-		return x.Tags
-	}
-	return nil
 }
 
 func (x *User) GetCreatedAt() *timestamppb.Timestamp {
@@ -197,7 +189,6 @@ type CreateUserRequest struct {
 	FullName      string                 `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	ProfilePicUrl string                 `protobuf:"bytes,4,opt,name=profile_pic_url,json=profilePicUrl,proto3" json:"profile_pic_url,omitempty"`
-	Tags          []string               `protobuf:"bytes,5,rep,name=tags,proto3" json:"tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -260,16 +251,10 @@ func (x *CreateUserRequest) GetProfilePicUrl() string {
 	return ""
 }
 
-func (x *CreateUserRequest) GetTags() []string {
-	if x != nil {
-		return x.Tags
-	}
-	return nil
-}
-
 type CreateUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	User          *User                  `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -302,6 +287,13 @@ func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateUserResponse.ProtoReflect.Descriptor instead.
 func (*CreateUserResponse) Descriptor() ([]byte, []int) {
 	return file_user_v1_user_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateUserResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
 }
 
 func (x *CreateUserResponse) GetUser() *User {
@@ -727,7 +719,7 @@ var File_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x12user/v1/user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xca\x02\n" +
+	"\x12user/v1/user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa4\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
@@ -735,24 +727,23 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\x05email\x18\x04 \x01(\tR\x05email\x12&\n" +
 	"\x0fprofile_pic_url\x18\x05 \x01(\tR\rprofilePicUrl\x12\x1f\n" +
 	"\vis_verified\x18\x06 \x01(\bR\n" +
-	"isVerified\x12$\n" +
-	"\x04tags\x18\a \x03(\v2\x10.user.v1.UserTagR\x04tags\x129\n" +
+	"isVerified\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"D\n" +
+	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"D\n" +
 	"\aUserTag\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x10\n" +
-	"\x03tag\x18\x03 \x01(\tR\x03tag\"\x9e\x01\n" +
+	"\x03tag\x18\x03 \x01(\tR\x03tag\"\x8a\x01\n" +
 	"\x11CreateUserRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1b\n" +
 	"\tfull_name\x18\x02 \x01(\tR\bfullName\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12&\n" +
-	"\x0fprofile_pic_url\x18\x04 \x01(\tR\rprofilePicUrl\x12\x12\n" +
-	"\x04tags\x18\x05 \x03(\tR\x04tags\"7\n" +
-	"\x12CreateUserResponse\x12!\n" +
-	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\"\xae\x01\n" +
+	"\x0fprofile_pic_url\x18\x04 \x01(\tR\rprofilePicUrl\"M\n" +
+	"\x12CreateUserResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12!\n" +
+	"\x04user\x18\x02 \x01(\v2\r.user.v1.UserR\x04user\"\xae\x01\n" +
 	"\x11UpdateUserRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
@@ -817,28 +808,27 @@ var file_user_v1_user_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
-	1,  // 0: user.v1.User.tags:type_name -> user.v1.UserTag
-	12, // 1: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	12, // 2: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: user.v1.CreateUserResponse.user:type_name -> user.v1.User
-	0,  // 4: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
-	0,  // 5: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
-	0,  // 6: user.v1.ListUsersResponse.users:type_name -> user.v1.User
-	2,  // 7: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
-	4,  // 8: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
-	6,  // 9: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
-	8,  // 10: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
-	10, // 11: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
-	3,  // 12: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
-	5,  // 13: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
-	7,  // 14: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
-	9,  // 15: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	11, // 16: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
-	12, // [12:17] is the sub-list for method output_type
-	7,  // [7:12] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	12, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	12, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: user.v1.CreateUserResponse.user:type_name -> user.v1.User
+	0,  // 3: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
+	0,  // 4: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
+	0,  // 5: user.v1.ListUsersResponse.users:type_name -> user.v1.User
+	2,  // 6: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
+	4,  // 7: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
+	6,  // 8: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
+	8,  // 9: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
+	10, // 10: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
+	3,  // 11: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
+	5,  // 12: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
+	7,  // 13: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
+	9,  // 14: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	11, // 15: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
+	11, // [11:16] is the sub-list for method output_type
+	6,  // [6:11] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_user_v1_user_proto_init() }

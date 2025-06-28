@@ -1,7 +1,7 @@
-customer_server:
+user_server:
   port: 50051
 database:
   username: token
   token: token
   path: ./secure-connect.zip
-  keyspace: threads_go_keyspace
+  keyspace: threads_keyspace

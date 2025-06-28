@@ -4,14 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"connectrpc.com/connect"
 	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
 	userv1connect "github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
 	"github.com/yaninyzwitty/threads-go-backend/services/repository"
+	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"google.golang.org/protobuf/types/known/timestamppb"
+)
+
+const (
+	USER_ROLE = "user"
 )
 
 type UserController struct {
@@ -26,22 +32,13 @@ func NewUserController(userRepo *repository.UserRepository) *UserController {
 }
 
 func (c *UserController) CreateUser(ctx context.Context, req *connect.Request[userv1.CreateUserRequest]) (*connect.Response[userv1.CreateUserResponse], error) {
-	if req.Msg.Username == "" || req.Msg.Email == "" || req.Msg.FullName == "" || req.Msg.ProfilePicUrl == "" || len(req.Msg.Tags) == 0 {
+	if req.Msg.Username == "" || req.Msg.Email == "" || req.Msg.FullName == "" || req.Msg.ProfilePicUrl == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
 	userId, err := snowflake.GenerateID()
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate sonyflake id"))
-	}
-
-	var userTags []*userv1.UserTag
-	for _, tag := range req.Msg.Tags {
-		tagId, err := snowflake.GenerateID()
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate sonyflake id"))
-		}
-		userTags = append(userTags, &userv1.UserTag{Id: int64(tagId), Tag: tag, UserId: int64(userId)})
 	}
 
 	user := &userv1.User{
@@ -51,7 +48,6 @@ func (c *UserController) CreateUser(ctx context.Context, req *connect.Request[us
 		Email:         req.Msg.Email,
 		ProfilePicUrl: req.Msg.ProfilePicUrl,
 		IsVerified:    false,
-		Tags:          userTags,
 		CreatedAt:     timestamppb.New(time.Now()),
 		UpdatedAt:     timestamppb.New(time.Now()),
 	}
@@ -60,8 +56,16 @@ func (c *UserController) CreateUser(ctx context.Context, req *connect.Request[us
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to create user"))
 	}
 
+	// generate JWT token
+
+	token, err := helpers.GenerateToken(user.Email, USER_ROLE, user.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate token"))
+	}
+
 	return connect.NewResponse(&userv1.CreateUserResponse{
-		User: user,
+		User:  user,
+		Token: token,
 	}), nil
 }
 
@@ -75,20 +79,10 @@ func (c *UserController) UpdateUser(ctx context.Context, req *connect.Request[us
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get user"))
 	}
 
-	var userTags []*userv1.UserTag
-	for _, tag := range req.Msg.Tags {
-		tagId, err := snowflake.GenerateID()
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate sonyflake id"))
-		}
-		userTags = append(userTags, &userv1.UserTag{Id: int64(tagId), Tag: tag, UserId: int64(req.Msg.Id)})
-	}
-
 	user.Username = req.Msg.Username
 	user.FullName = req.Msg.FullName
 	user.Email = req.Msg.Email
 	user.ProfilePicUrl = req.Msg.ProfilePicUrl
-	user.Tags = userTags
 	user.UpdatedAt = timestamppb.New(time.Now())
 
 	if err := c.userRepo.UpdateUser(ctx, user); err != nil {
@@ -103,6 +97,27 @@ func (c *UserController) UpdateUser(ctx context.Context, req *connect.Request[us
 func (c *UserController) DeleteUser(ctx context.Context, req *connect.Request[userv1.DeleteUserRequest]) (*connect.Response[userv1.DeleteUserResponse], error) {
 	if req.Msg.Id == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
+	}
+
+	// blacklist token to force logout after delete
+	authHeader := req.Header().Get("Authorization")
+	if authHeader == "" {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing authorization header"))
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("invalid authorization header format"))
+	}
+
+	token := parts[1]
+	if token == "" {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("empty token"))
+	}
+
+	// blacklist token first to ensure it's invalidated even if user deletion fails
+	if err := helpers.BlacklistToken(ctx, token, time.Now().Add(24*time.Hour)); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to blacklist token"))
 	}
 
 	if err := c.userRepo.DeleteUser(ctx, req.Msg.Id); err != nil {

@@ -1,8 +1,11 @@
 package helpers
 
-import "os"
+import (
+	"os"
+)
 
 func GetEnvOrDefault(key, defaultValue string) string {
+
 	if value := os.Getenv(key); value != "" {
 		return value
 	}

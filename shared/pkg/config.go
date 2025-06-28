@@ -8,11 +8,11 @@ import (
 )
 
 type Config struct {
-	CustomerServer CustomerServer `yaml:"customer_server"`
-	Database       Database       `yaml:"database"`
+	UserServer UserServer `yaml:"user_server"`
+	Database   Database   `yaml:"database"`
 }
 
-type CustomerServer struct {
+type UserServer struct {
 	Port int `yaml:"port"`
 }
 

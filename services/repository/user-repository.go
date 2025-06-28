@@ -20,30 +20,27 @@ func NewUserRepository(session *gocql.Session) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user *userv1.User) error {
-	query := `
-		INSERT INTO threads_go_keyspace.users (id, username, full_name, email, profile_pic_url, tags, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`
+	query := `INSERT INTO threads_keyspace.users (id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at) VALUES(?, ?, ?, ?, ?, false, ?, ?)`
 
-	return r.session.Query(query, user.Id, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.Tags, user.CreatedAt, user.UpdatedAt).Exec()
+	return r.session.Query(query, user.Id, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.CreatedAt.AsTime(), user.UpdatedAt.AsTime()).Exec()
 
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, user *userv1.User) error {
-	query := `UPDATE threads_go_keyspace.users SET username = ?, full_name = ?, email = ?, profile_pic_url = ?, tags = ?, updated_at = ? WHERE id = ?`
-	return r.session.Query(query, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.Tags, user.UpdatedAt, user.Id).Exec()
+	query := `UPDATE threads_keyspace.users SET username = ?, full_name = ?, email = ?, profile_pic_url = ?, updated_at = ? WHERE id = ?`
+	return r.session.Query(query, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.UpdatedAt.AsTime(), user.Id).Exec()
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int64) error {
-	query := `DELETE FROM threads_go_keyspace.users WHERE id = ?`
+	query := `DELETE FROM threads_keyspace.users WHERE id = ?`
 	return r.session.Query(query, id).Exec()
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*userv1.User, error) {
-	query := `SELECT id, username, full_name, email, profile_pic_url, tags, created_at, updated_at FROM threads_go_keyspace.users WHERE id = ?`
+	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_keyspace.users WHERE id = ?`
 	var user userv1.User
 	var createdAt, updatedAt time.Time
-	err := r.session.Query(query, id).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.Tags, &createdAt, &updatedAt)
+	err := r.session.Query(query, id).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +56,7 @@ func (r *UserRepository) ListUsers(
 	pagingState []byte,
 ) ([]*userv1.User, []byte, error) {
 
-	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_go_keyspace.users`
+	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_keyspace.users`
 
 	iter := r.session.Query(query).
 		WithContext(ctx).
@@ -97,10 +94,8 @@ func (r *UserRepository) ListUsers(
 			Email:         email,
 			ProfilePicUrl: profilePicURL,
 			IsVerified:    isVerified,
-			Tags:          []*userv1.UserTag{}, // Tags handled separately if needed
-
-			CreatedAt: timestamppb.New(createdAt),
-			UpdatedAt: timestamppb.New(updatedAt),
+			CreatedAt:     timestamppb.New(createdAt),
+			UpdatedAt:     timestamppb.New(updatedAt),
 		})
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
 	"github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
 	"github.com/yaninyzwitty/threads-go-backend/services/repository"
@@ -23,6 +25,15 @@ import (
 )
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		slog.Warn("No .env file found")
+	}
+
+	// Init helpers (Redis + JWT)
+	helpers.InitHelpers()
+
+	// Load config
 	cfg := pkg.Config{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -36,11 +47,6 @@ func main() {
 
 	if err := snowflake.InitSonyFlake(); err != nil {
 		slog.Error("failed to initialize snowflake", "error", err)
-		os.Exit(1)
-	}
-
-	if err := godotenv.Load(); err != nil {
-		slog.Error("failed to load .env file", "error", err)
 		os.Exit(1)
 	}
 
@@ -61,18 +67,26 @@ func main() {
 
 	defer session.Close()
 
+	// create the user service address
+	userServiceAddr := fmt.Sprintf(":%d", cfg.UserServer.Port)
+
+	// inject the repository and controller DDD
 	userRepo := repository.NewUserRepository(session)
 	userController := controller.NewUserController(userRepo)
 
-	userPath, userHandler := userv1connect.NewUserServiceHandler(userController)
+	//build http server from service implementation
+	userPath, userHandler := userv1connect.NewUserServiceHandler(
+		userController,
+		connect.WithInterceptors(helpers.AuthInterceptor()))
 	mux := http.NewServeMux()
 	mux.Handle(userPath, userHandler)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    userServiceAddr,
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
 	}
 
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -92,4 +106,14 @@ func main() {
 			slog.Info("server shutdown gracefully")
 		}
 	}()
+
+	// Start HTTP server
+	slog.Info("starting HTTP server", "address", userServiceAddr, "pid", os.Getpid())
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		slog.Error("server failed", "error", err)
+		os.Exit(1)
+	}
+
+	wg.Wait()
+	slog.Info("service shutdown complete")
 }
