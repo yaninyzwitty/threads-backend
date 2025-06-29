@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gocql/gocql"
 	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -106,4 +108,86 @@ func (r *UserRepository) ListUsers(
 	}
 
 	return users, nextPageState, nil
+}
+
+func (r *UserRepository) FollowUser(ctx context.Context, userID, followingID int64, now time.Time) error {
+
+	if userID == followingID {
+		return fmt.Errorf("user cannot follow themselves")
+	}
+
+	followUserQuery := `INSERT INTO threads_keyspace.followers_by_user (user_id, follower_id, followed_at) VALUES (?, ?, ?)`
+
+	outboxQuery := `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false)`
+
+	// use batch to store data in both outbox table and followings table
+	const evtType = "user.followed"
+
+	// create a batch to store data in both outbox table and followings table
+	loggedBatch := r.session.NewBatch(gocql.LoggedBatch)
+
+	// attach context
+	loggedBatch.WithContext(ctx)
+
+	loggedBatch.Query(followUserQuery, userID, followingID, now) // insert to the following table
+
+	payload, err := protojson.Marshal(&userv1.FollowedEvent{
+		UserId:      userID,
+		FollowingId: followingID,
+		FollowedAt:  timestamppb.New(now),
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	loggedBatch.Query(outboxQuery, evtType, payload) // insert to the outbox table
+
+	// execute the batch
+	if err := r.session.ExecuteBatch(loggedBatch); err != nil {
+		return fmt.Errorf("failed to execute batch: %w", err)
+	}
+
+	return nil
+
+}
+
+func (r *UserRepository) UnfollowUser(ctx context.Context, userID, followingID int64, now time.Time) error {
+	// SQL queries
+	unfollowQuery := `
+		DELETE FROM threads_keyspace.followers_by_user 
+		WHERE user_id = ? AND following_id = ?`
+
+	outboxQuery := `
+		INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) 
+		VALUES (uuid(), ?, ?, false)`
+
+	const evtType = "user.unfollowed"
+
+	// Create logged batch
+	loggedBatch := r.session.NewBatch(gocql.LoggedBatch)
+	loggedBatch.WithContext(ctx)
+
+	// Add unfollow delete query
+	loggedBatch.Query(unfollowQuery, userID, followingID)
+
+	// Marshal the event payload
+	payload, err := protojson.Marshal(&userv1.UnfollowedEvent{
+		UserId:       userID,
+		FollowingId:  followingID,
+		UnfollowedAt: timestamppb.New(now),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	// Add outbox event
+	loggedBatch.Query(outboxQuery, evtType, payload)
+
+	// Execute the batch
+	if err := r.session.ExecuteBatch(loggedBatch); err != nil {
+		return fmt.Errorf("failed to execute batch: %w", err)
+	}
+
+	return nil
 }

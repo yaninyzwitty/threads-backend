@@ -17,6 +17,19 @@ message User {
   google.protobuf.Timestamp updated_at = 8;
 }
 
+message FollowedEvent {
+  int64 user_id = 1;
+  int64 following_id = 2;
+  google.protobuf.Timestamp followed_at = 3;
+}
+
+message UnfollowedEvent {
+  int64 user_id = 1;
+  int64 following_id = 2;
+  google.protobuf.Timestamp unfollowed_at = 3;
+}
+
+
 message UserTag {
   int64 id = 1;
   int64 user_id = 2;
@@ -79,6 +92,24 @@ message ListUsersResponse {
   bytes next_page_token = 2;
 }
 
+message FollowUserRequest {
+  int64 user_id = 1;
+  int64 following_id = 2;
+}
+
+message FollowUserResponse {
+  bool success = 1;
+} 
+
+message UnfollowUserRequest {
+  int64 user_id = 1;
+  int64 following_id = 2;
+}
+
+message UnfollowUserResponse {
+  bool success = 1;
+}
+
 // === Service ===
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
@@ -86,4 +117,6 @@ service UserService {
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
   rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc FollowUser(FollowUserRequest) returns (FollowUserResponse);
+  rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowUserResponse);
 }
