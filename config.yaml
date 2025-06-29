@@ -4,9 +4,9 @@ processor-server:
   port: 500052
 queue:
   brokers:
-    - "127.0.0.1:9042"
-    - "127.0.0.1:9043"
-    - "127.0.0.1:9044"
+    - "127.0.0.1:9092"
+    - "127.0.0.1:9093"
+    - "127.0.0.1:9094"
   topic: outbox
   group_id: processor-service
 
