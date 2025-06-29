@@ -24,6 +24,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
+// main initializes configuration, services, and dependencies, then starts the ConnectRPC user service server with graceful shutdown support.
 func main() {
 
 	// set up logger

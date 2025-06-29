@@ -14,7 +14,8 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/pkg"
 )
 
-// initialize client here
+// main initializes configuration, sets up a user service client, and sends a follow user request using hardcoded user IDs.
+// It loads environment variables and configuration files, constructs the service URL, attaches an authorization token, and logs the result or exits on failure.
 
 func main() {
 

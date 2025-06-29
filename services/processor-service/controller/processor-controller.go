@@ -15,6 +15,7 @@ type ProcessorController struct {
 	repo *repository.ProcessorRepository
 }
 
+// NewProcessorController creates a new ProcessorController initialized with the given ProcessorRepository.
 func NewProcessorController(repo *repository.ProcessorRepository) *ProcessorController {
 	return &ProcessorController{
 		repo: repo,

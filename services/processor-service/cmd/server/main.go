@@ -26,6 +26,9 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 )
 
+// main is the entry point for the processor service server.
+//
+// It initializes logging, loads environment variables and configuration, sets up helpers, connects to AstraDB and Kafka, and configures the repository and controller layers. The function starts a ConnectRPC server with HTTP/2 cleartext support and handles graceful shutdown on receiving termination signals. The server integrates database and queue resources, ensuring proper cleanup and error handling throughout its lifecycle.
 func main() {
 	// set up logger
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
