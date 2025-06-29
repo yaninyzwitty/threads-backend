@@ -12,20 +12,21 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+
 	"github.com/joho/godotenv"
-	"github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
-	"github.com/yaninyzwitty/threads-go-backend/services/user-service/controller"
-	"github.com/yaninyzwitty/threads-go-backend/services/user-service/repository"
+	"github.com/yaninyzwitty/threads-go-backend/gen/processor/v1/processorv1connect"
+	"github.com/yaninyzwitty/threads-go-backend/services/processor-service/controller"
+	"github.com/yaninyzwitty/threads-go-backend/services/processor-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
 	"github.com/yaninyzwitty/threads-go-backend/shared/pkg"
+	"github.com/yaninyzwitty/threads-go-backend/shared/queue"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 func main() {
-
 	// set up logger
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -72,22 +73,39 @@ func main() {
 
 	defer session.Close()
 
-	// create the user service address
-	userServiceAddr := fmt.Sprintf(":%d", cfg.UserServer.Port)
+	// create kafka instance
 
-	// inject the repository and controller DDD
-	userRepo := repository.NewUserRepository(session)
-	userController := controller.NewUserController(userRepo)
+	kafkaConfig := queue.Config{
+		Brokers: cfg.Queue.Brokers,
+		Topic:   cfg.Queue.Topic,
+		GroupID: cfg.Queue.GroupID,
+	}
+
+	// create kafka producer
+	kafkaWriter := queue.NewKafkaConfig(kafkaConfig)
+
+	producer := queue.NewProducer(kafkaWriter)
+
+	defer producer.Close()
+
+	// create the user service address
+	processorServiceAddr := fmt.Sprintf(":%d", cfg.ProcessorServer.Port)
+
+	// create repository
+	processorServiceRepo := repository.NewProcessorRepository(session, producer)
+
+	// create controller
+	processorServiceController := controller.NewProcessorController(processorServiceRepo)
 
 	//build http server from service implementation
-	userPath, userHandler := userv1connect.NewUserServiceHandler(
-		userController,
+	processorPath, processorHandler := processorv1connect.NewProcessorServiceHandler(
+		processorServiceController,
 		connect.WithInterceptors(helpers.AuthInterceptor()))
 	mux := http.NewServeMux()
-	mux.Handle(userPath, userHandler)
+	mux.Handle(processorPath, processorHandler)
 
 	server := &http.Server{
-		Addr:    userServiceAddr,
+		Addr:    processorServiceAddr,
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
 	}
 
@@ -112,13 +130,9 @@ func main() {
 		}
 	}()
 
-	// Start Connectrpc server
-	slog.Info("starting ConnectRPC server", "address", userServiceAddr, "pid", os.Getpid())
+	// Start ConnectRPC server
+	slog.Info("starting ConnectRPC server", "address", processorServiceAddr, "pid", os.Getpid())
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("server failed", "error", err)
-		os.Exit(1)
 	}
-
-	wg.Wait()
-	slog.Info("service shutdown complete")
 }

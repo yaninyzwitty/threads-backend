@@ -1,5 +1,15 @@
 user_server:
-  port: 50051
+  port: 500051
+processor-server:
+  port: 500052
+queue:
+  brokers:
+    - "127.0.0.1:9092"
+    - "127.0.0.1:9093"
+    - "127.0.0.1:9094"
+  topic: outbox
+  group_id: processor-service
+
 database:
   username: token
   token: token

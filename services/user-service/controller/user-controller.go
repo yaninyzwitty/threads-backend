@@ -10,7 +10,7 @@ import (
 	"connectrpc.com/connect"
 	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
 	userv1connect "github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
-	"github.com/yaninyzwitty/threads-go-backend/services/repository"
+	"github.com/yaninyzwitty/threads-go-backend/services/user-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -70,7 +70,7 @@ func (c *UserController) CreateUser(ctx context.Context, req *connect.Request[us
 }
 
 func (c *UserController) UpdateUser(ctx context.Context, req *connect.Request[userv1.UpdateUserRequest]) (*connect.Response[userv1.UpdateUserResponse], error) {
-	if req.Msg.Id == 0 || req.Msg.Username == "" || req.Msg.Email == "" || req.Msg.FullName == "" || req.Msg.ProfilePicUrl == "" || len(req.Msg.Tags) == 0 {
+	if req.Msg.Id == 0 || req.Msg.Username == "" || req.Msg.Email == "" || req.Msg.FullName == "" || req.Msg.ProfilePicUrl == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
@@ -166,5 +166,37 @@ func (c *UserController) ListUsers(ctx context.Context, req *connect.Request[use
 	return connect.NewResponse(&userv1.ListUsersResponse{
 		Users:         users,
 		NextPageToken: nextPageToken,
+	}), nil
+}
+
+func (c *UserController) FollowUser(ctx context.Context, req *connect.Request[userv1.FollowUserRequest]) (*connect.Response[userv1.FollowUserResponse], error) {
+	if req.Msg.UserId == 0 || req.Msg.FollowingId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
+	}
+
+	now := time.Now()
+
+	if err := c.userRepo.FollowUser(ctx, req.Msg.UserId, req.Msg.FollowingId, now); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to follow user"))
+	}
+
+	return connect.NewResponse(&userv1.FollowUserResponse{
+		Success: true,
+	}), nil
+}
+
+func (c *UserController) UnfollowUser(ctx context.Context, req *connect.Request[userv1.UnfollowUserRequest]) (*connect.Response[userv1.UnfollowUserResponse], error) {
+	if req.Msg.UserId == 0 || req.Msg.FollowingId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
+	}
+
+	now := time.Now()
+
+	if err := c.userRepo.UnfollowUser(ctx, req.Msg.UserId, req.Msg.FollowingId, now); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to unfollow user"))
+	}
+
+	return connect.NewResponse(&userv1.UnfollowUserResponse{
+		Success: true,
 	}), nil
 }

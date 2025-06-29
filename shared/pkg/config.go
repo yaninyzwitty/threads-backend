@@ -8,12 +8,24 @@ import (
 )
 
 type Config struct {
-	UserServer UserServer `yaml:"user_server"`
-	Database   Database   `yaml:"database"`
+	UserServer      UserServer      `yaml:"user_server"`
+	Database        Database        `yaml:"database"`
+	ProcessorServer ProcessorServer `yaml:"processor"`
+	Queue           Queue           `yaml:"queue"`
+}
+
+type ProcessorServer struct {
+	Port int `yaml:"port"`
 }
 
 type UserServer struct {
 	Port int `yaml:"port"`
+}
+
+type Queue struct {
+	Brokers []string `yaml:"brokers"`
+	Topic   string   `yaml:"topic"`
+	GroupID string   `yaml:"group_id"`
 }
 
 type Database struct {

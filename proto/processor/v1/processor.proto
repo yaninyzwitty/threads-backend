@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package processor.v1;
+
+
+message OutboxMessage {
+    string event_id = 1;
+    string event_type = 2;
+    bytes payload = 3;
+    bool published = 4;
+}
+
+message ProcessOutboxMessageRequest {
+    bool published = 1;
+}
+
+message ProcessOutboxMessageResponse {
+    int32 processed_count = 1;
+}
+
+
+service ProcessorService {
+    rpc ProcessOutboxMessage(ProcessOutboxMessageRequest) returns (ProcessOutboxMessageResponse);
+}
