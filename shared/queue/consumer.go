@@ -13,6 +13,7 @@ type Consumer struct {
 	reader *kafka.Reader
 }
 
+// NewConsumer creates a new Consumer instance using the provided Kafka reader.
 func NewConsumer(reader *kafka.Reader) *Consumer {
 	return &Consumer{reader: reader}
 }

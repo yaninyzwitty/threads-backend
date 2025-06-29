@@ -12,7 +12,8 @@ type Config struct {
 	GroupID string
 }
 
-// KafkaWriter initializes a Kafka writer (producer)
+// NewKafkaConfig returns a Kafka writer configured as a producer for the specified brokers and topic.
+// The writer uses least-bytes balancing, requires acknowledgments from all replicas, operates asynchronously, and batches messages with a 10 millisecond timeout.
 
 func NewKafkaConfig(cfg Config) *kafka.Writer {
 	return &kafka.Writer{
@@ -25,7 +26,8 @@ func NewKafkaConfig(cfg Config) *kafka.Writer {
 	}
 }
 
-// KafkaReader initializes a Kafka reader (consumer)
+// NewKafkaReader returns a Kafka reader configured as a consumer for the specified brokers, topic, and consumer group.
+// The reader fetches messages in batches between 10KB and 10MB, starts from the earliest offset, and commits offsets every second.
 
 func NewKafkaReader(cfg Config) *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{

@@ -15,6 +15,7 @@ type ProcessorRepository struct {
 	producer *queue.Producer
 }
 
+// NewProcessorRepository creates a new ProcessorRepository with the provided Cassandra session and message queue producer.
 func NewProcessorRepository(session *gocql.Session, producer *queue.Producer) *ProcessorRepository {
 	return &ProcessorRepository{
 		session:  session,

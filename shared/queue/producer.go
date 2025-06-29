@@ -12,6 +12,7 @@ type Producer struct {
 	writer *kafka.Writer
 }
 
+// NewProducer creates a new Producer instance using the provided Kafka writer.
 func NewProducer(writer *kafka.Writer) *Producer {
 	return &Producer{
 		writer: writer,
