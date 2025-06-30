@@ -39,21 +39,21 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.followers_by_user  (
 
 -- schema for following table
 
-CREATE TABLE IF NOT EXISTS following_by_user  (
+CREATE TABLE IF NOT EXISTS threads_keyspace.following_by_user  (
     user_id bigint,
     following_id bigint,
     following_at timestamp,
     PRIMARY KEY (user_id, following_id)
 );
 
-CREATE TABLE follower_counts (
+CREATE TABLE threads_keyspace.follower_counts (
     user_id bigint PRIMARY KEY,
     follower_count counter,
     following_count counter
 );
 
 -- create outbox table
-CREATE TABLE IF NOT EXISTS outbox (
+CREATE TABLE IF NOT EXISTS threads_keyspace.outbox (
     event_id uuid,
     event_type text,
     payload text, -- for JSONB 

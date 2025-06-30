@@ -86,7 +86,17 @@ func main() {
 
 	producer := queue.NewProducer(kafkaWriter)
 
+	if producer == nil {
+		slog.Error("failed to create kafka producer")
+		os.Exit(1)
+	}
+
 	defer producer.Close()
+
+	// start background worker pool
+	workerContext, workerCancel := context.WithCancel(context.Background())
+
+	defer workerCancel()
 
 	// create the user service address
 	processorServiceAddr := fmt.Sprintf(":%d", cfg.ProcessorServer.Port)
@@ -114,7 +124,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 		sig := <-quit
@@ -128,6 +138,13 @@ func main() {
 		} else {
 			slog.Info("server shutdown gracefully")
 		}
+	}()
+
+	go func() {
+
+		defer wg.Done()
+		StartWorkerPool(workerContext, session, producer, 3, processorServiceController)
+
 	}()
 
 	// Start ConnectRPC server

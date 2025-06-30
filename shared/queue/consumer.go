@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -30,8 +31,9 @@ func (c *Consumer) Consume(ctx context.Context, handler MessageHandler) error {
 
 		// Handle the message
 		if err := handler(m); err != nil {
-			fmt.Println("Handler error:", err)
-			// Decide: retry, skip, log, send to DLQ, etc.
+			slog.Error("Message handler failed", "error", err, "topic", m.Topic, "partition", m.Partition, "offset", m.Offset)
+			// TODO: Implement retry logic or dead letter queue
+			continue // Skip committing this message
 		}
 
 		// Commit offset after successful handling

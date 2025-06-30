@@ -174,6 +174,10 @@ func (c *UserController) FollowUser(ctx context.Context, req *connect.Request[us
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
+	if req.Msg.UserId == req.Msg.FollowingId {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("users cannot follow themselves"))
+	}
+
 	now := time.Now()
 
 	if err := c.userRepo.FollowUser(ctx, req.Msg.UserId, req.Msg.FollowingId, now); err != nil {
@@ -188,6 +192,10 @@ func (c *UserController) FollowUser(ctx context.Context, req *connect.Request[us
 func (c *UserController) UnfollowUser(ctx context.Context, req *connect.Request[userv1.UnfollowUserRequest]) (*connect.Response[userv1.UnfollowUserResponse], error) {
 	if req.Msg.UserId == 0 || req.Msg.FollowingId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
+	}
+
+	if req.Msg.UserId == req.Msg.FollowingId {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("users cannot unfollow themselves"))
 	}
 
 	now := time.Now()
