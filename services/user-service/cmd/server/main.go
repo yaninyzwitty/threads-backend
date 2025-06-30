@@ -75,6 +75,8 @@ func main() {
 	// create the user service address
 	userServiceAddr := fmt.Sprintf(":%d", cfg.UserServer.Port)
 
+	slog.Info("user service address", "address", userServiceAddr)
+
 	// inject the repository and controller DDD
 	userRepo := repository.NewUserRepository(session)
 	userController := controller.NewUserController(userRepo)

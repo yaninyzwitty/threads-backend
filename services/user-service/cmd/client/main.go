@@ -42,8 +42,8 @@ func main() {
 	)
 
 	req := connect.NewRequest(&userv1.FollowUserRequest{
-		UserId:      int64(143916461868469878),
-		FollowingId: int64(143916359158353526),
+		UserId:      144158279298207350,
+		FollowingId: 143915604384960118,
 	})
 	req.Header().Set("Authorization", "Bearer "+os.Getenv("ZURI_TOKEN"))
 
