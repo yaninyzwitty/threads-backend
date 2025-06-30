@@ -27,6 +27,7 @@ func (r *ProcessorRepository) GetOutboxMessages(ctx context.Context, published b
 		SELECT event_id, event_type, payload, published
 		FROM outbox
 		WHERE published = ?
+		ORDER BY event_id ASC
 		LIMIT ?;
 	`
 
@@ -34,14 +35,15 @@ func (r *ProcessorRepository) GetOutboxMessages(ctx context.Context, published b
 
 	var outboxMessages []*processorv1.OutboxMessage
 
-	var eventId, eventType, payload string
+	var eventId, eventType string
+	var payload []byte
 	var isPublished bool
 
 	for iter.Scan(&eventId, &eventType, &payload, &isPublished) {
 		outboxMessages = append(outboxMessages, &processorv1.OutboxMessage{
 			EventId:   eventId,
 			EventType: eventType,
-			Payload:   []byte(payload),
+			Payload:   payload,
 			Published: isPublished,
 		})
 	}
