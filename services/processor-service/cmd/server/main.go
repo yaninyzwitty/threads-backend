@@ -26,6 +26,7 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 )
 
+// main initializes application dependencies, starts the ConnectRPC server, and manages graceful shutdown and background worker pool execution.
 func main() {
 	// set up logger
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{

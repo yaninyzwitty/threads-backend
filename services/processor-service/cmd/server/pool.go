@@ -11,6 +11,8 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/queue"
 )
 
+// StartWorkerPool launches a pool of worker goroutines that periodically process events until the context is canceled.
+// Each worker invokes ProcessEvents every 5 seconds and exits gracefully when the context is done. The function waits for each worker to complete before starting the next.
 func StartWorkerPool(ctx context.Context, session *gocql.Session, writer *queue.Producer, numWorkers int, processorServiceController *controller.ProcessorController) {
 	wg := sync.WaitGroup{}
 

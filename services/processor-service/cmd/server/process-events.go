@@ -11,6 +11,8 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/queue"
 )
 
+// ProcessEvents processes unpublished outbox messages using the provided processor controller.
+// It logs the number of events processed and returns an error if processing fails.
 func ProcessEvents(ctx context.Context, session *gocql.Session, writer *queue.Producer, processorServiceController *controller.ProcessorController) error {
 
 	req := connect.NewRequest(&processorv1.ProcessOutboxMessageRequest{
