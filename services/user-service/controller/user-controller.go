@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"strconv"
+
 	"strings"
 	"time"
 
@@ -174,13 +177,25 @@ func (c *UserController) FollowUser(ctx context.Context, req *connect.Request[us
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
-	if req.Msg.UserId == req.Msg.FollowingId {
+	userIdStr, ok := helpers.GetUserIDFromContext(ctx)
+	if !ok {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
+	}
+
+	userId, err := strconv.ParseInt(userIdStr, 10, 64)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to parse user id"))
+	}
+
+	slog.Info("userId", "userId", userId)
+
+	if userId == req.Msg.FollowingId {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("users cannot follow themselves"))
 	}
 
 	now := time.Now()
 
-	if err := c.userRepo.FollowUser(ctx, req.Msg.UserId, req.Msg.FollowingId, now); err != nil {
+	if err := c.userRepo.FollowUser(ctx, userId, req.Msg.FollowingId, now); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to follow user"))
 	}
 

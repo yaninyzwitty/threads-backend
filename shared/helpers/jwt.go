@@ -115,11 +115,8 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 		return nil, errors.New("invalid claims type")
 	}
 
-	if claims.Email == "" {
-		return nil, errors.New("missing email in claims")
-	}
-	if claims.Subject == "" {
-		return nil, errors.New("missing subject (userID) in claims")
+	if claims.Email == "" || claims.Subject == "" {
+		return nil, errors.New("missing email or subject in claims")
 	}
 
 	return claims, nil

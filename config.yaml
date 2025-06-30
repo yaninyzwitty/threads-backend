@@ -1,7 +1,7 @@
-user_server:
-  port: 500051
+user-server:
+  port: 50051
 processor-server:
-  port: 500052
+  port: 50052
 queue:
   brokers:
     - "127.0.0.1:9092"

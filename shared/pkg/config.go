@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	UserServer      UserServer      `yaml:"user_server"`
+	UserServer      UserServer      `yaml:"user-server"`
 	Database        Database        `yaml:"database"`
-	ProcessorServer ProcessorServer `yaml:"processor"`
+	ProcessorServer ProcessorServer `yaml:"processor-server"`
 	Queue           Queue           `yaml:"queue"`
 }
 
