@@ -89,7 +89,8 @@ func GenerateToken(email, role string, userID int64) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
-// -------------------- JWT Validation --------------------
+// ValidateJWT parses and verifies a JWT token string, returning its claims if valid.
+// Returns an error if the token is empty, invalid, uses an unexpected signing method, or lacks required claims.
 
 func ValidateJWT(tokenString string) (*Claims, error) {
 	if tokenString == "" {
