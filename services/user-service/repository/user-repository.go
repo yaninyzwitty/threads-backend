@@ -51,6 +51,19 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*userv1.Use
 	user.UpdatedAt = timestamppb.New(updatedAt)
 	return &user, nil
 }
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*userv1.User, error) {
+	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_keyspace.users WHERE email = ?`
+	var user userv1.User
+	var createdAt, updatedAt time.Time
+	err := r.session.Query(query, email).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	user.CreatedAt = timestamppb.New(createdAt)
+	user.UpdatedAt = timestamppb.New(updatedAt)
+	return &user, nil
+}
 
 func (r *UserRepository) ListUsers(
 	ctx context.Context,
@@ -118,7 +131,7 @@ func (r *UserRepository) FollowUser(ctx context.Context, userID, followingID int
 
 	followUserQuery := `INSERT INTO threads_keyspace.followers_by_user (user_id, follower_id, followed_at) VALUES (?, ?, ?)`
 
-	outboxQuery := `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false)`
+	outboxQuery := `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false) USING TTL 86400`
 
 	// use batch to store data in both outbox table and followings table
 	const evtType = "user.followed"

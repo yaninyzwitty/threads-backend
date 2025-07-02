@@ -13,7 +13,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
+	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/controller"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
@@ -36,7 +38,7 @@ func main() {
 	}
 
 	// Init helpers (Redis + JWT)
-	helpers.InitHelpers()
+	// helpers.InitHelpers()
 
 	// Load config
 	cfg := pkg.Config{}
@@ -53,6 +55,14 @@ func main() {
 	if err := snowflake.InitSonyFlake(); err != nil {
 		slog.Error("failed to initialize snowflake", "error", err)
 		os.Exit(1)
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	refreshTokenStore := auth.RefreshTokenStore{
+		Redis: rdb,
 	}
 
 	db := database.NewAstraDB()
@@ -79,12 +89,12 @@ func main() {
 
 	// inject the repository and controller DDD
 	userRepo := repository.NewUserRepository(session)
-	userController := controller.NewUserController(userRepo)
+	userController := controller.NewUserController(userRepo, refreshTokenStore)
 
 	//build http server from service implementation
 	userPath, userHandler := userv1connect.NewUserServiceHandler(
 		userController,
-		connect.WithInterceptors(helpers.AuthInterceptor()))
+		connect.WithInterceptors(auth.AuthInterceptor()))
 	mux := http.NewServeMux()
 	mux.Handle(userPath, userHandler)
 

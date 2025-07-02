@@ -6,6 +6,7 @@ CREATE TABLE threads_keyspace.users (
     username text,
     full_name text,
     email text,
+    password text,
     profile_pic_url text,
     is_verified boolean,
     created_at timestamp,

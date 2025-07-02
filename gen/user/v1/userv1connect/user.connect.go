@@ -34,32 +34,20 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// UserServiceLoginUserProcedure is the fully-qualified name of the UserService's LoginUser RPC.
+	UserServiceLoginUserProcedure = "/user.v1.UserService/LoginUser"
 	// UserServiceCreateUserProcedure is the fully-qualified name of the UserService's CreateUser RPC.
 	UserServiceCreateUserProcedure = "/user.v1.UserService/CreateUser"
-	// UserServiceUpdateUserProcedure is the fully-qualified name of the UserService's UpdateUser RPC.
-	UserServiceUpdateUserProcedure = "/user.v1.UserService/UpdateUser"
-	// UserServiceDeleteUserProcedure is the fully-qualified name of the UserService's DeleteUser RPC.
-	UserServiceDeleteUserProcedure = "/user.v1.UserService/DeleteUser"
-	// UserServiceGetUserByIDProcedure is the fully-qualified name of the UserService's GetUserByID RPC.
-	UserServiceGetUserByIDProcedure = "/user.v1.UserService/GetUserByID"
-	// UserServiceListUsersProcedure is the fully-qualified name of the UserService's ListUsers RPC.
-	UserServiceListUsersProcedure = "/user.v1.UserService/ListUsers"
-	// UserServiceFollowUserProcedure is the fully-qualified name of the UserService's FollowUser RPC.
-	UserServiceFollowUserProcedure = "/user.v1.UserService/FollowUser"
-	// UserServiceUnfollowUserProcedure is the fully-qualified name of the UserService's UnfollowUser
+	// UserServiceRefreshTokenProcedure is the fully-qualified name of the UserService's RefreshToken
 	// RPC.
-	UserServiceUnfollowUserProcedure = "/user.v1.UserService/UnfollowUser"
+	UserServiceRefreshTokenProcedure = "/user.v1.UserService/RefreshToken"
 )
 
 // UserServiceClient is a client for the user.v1.UserService service.
 type UserServiceClient interface {
+	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
-	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
-	DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error)
-	GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error)
-	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
-	FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error)
-	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
+	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the user.v1.UserService service. By default, it uses
@@ -73,46 +61,22 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 	baseURL = strings.TrimRight(baseURL, "/")
 	userServiceMethods := v1.File_user_v1_user_proto.Services().ByName("UserService").Methods()
 	return &userServiceClient{
+		loginUser: connect.NewClient[v1.LoginUserRequest, v1.LoginUserResponse](
+			httpClient,
+			baseURL+UserServiceLoginUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("LoginUser")),
+			connect.WithClientOptions(opts...),
+		),
 		createUser: connect.NewClient[v1.CreateUserRequest, v1.CreateUserResponse](
 			httpClient,
 			baseURL+UserServiceCreateUserProcedure,
 			connect.WithSchema(userServiceMethods.ByName("CreateUser")),
 			connect.WithClientOptions(opts...),
 		),
-		updateUser: connect.NewClient[v1.UpdateUserRequest, v1.UpdateUserResponse](
+		refreshToken: connect.NewClient[v1.RefreshTokenRequest, v1.RefreshTokenResponse](
 			httpClient,
-			baseURL+UserServiceUpdateUserProcedure,
-			connect.WithSchema(userServiceMethods.ByName("UpdateUser")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteUser: connect.NewClient[v1.DeleteUserRequest, v1.DeleteUserResponse](
-			httpClient,
-			baseURL+UserServiceDeleteUserProcedure,
-			connect.WithSchema(userServiceMethods.ByName("DeleteUser")),
-			connect.WithClientOptions(opts...),
-		),
-		getUserByID: connect.NewClient[v1.GetUserByIDRequest, v1.GetUserByIDResponse](
-			httpClient,
-			baseURL+UserServiceGetUserByIDProcedure,
-			connect.WithSchema(userServiceMethods.ByName("GetUserByID")),
-			connect.WithClientOptions(opts...),
-		),
-		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
-			httpClient,
-			baseURL+UserServiceListUsersProcedure,
-			connect.WithSchema(userServiceMethods.ByName("ListUsers")),
-			connect.WithClientOptions(opts...),
-		),
-		followUser: connect.NewClient[v1.FollowUserRequest, v1.FollowUserResponse](
-			httpClient,
-			baseURL+UserServiceFollowUserProcedure,
-			connect.WithSchema(userServiceMethods.ByName("FollowUser")),
-			connect.WithClientOptions(opts...),
-		),
-		unfollowUser: connect.NewClient[v1.UnfollowUserRequest, v1.UnfollowUserResponse](
-			httpClient,
-			baseURL+UserServiceUnfollowUserProcedure,
-			connect.WithSchema(userServiceMethods.ByName("UnfollowUser")),
+			baseURL+UserServiceRefreshTokenProcedure,
+			connect.WithSchema(userServiceMethods.ByName("RefreshToken")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -120,13 +84,14 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
+	loginUser    *connect.Client[v1.LoginUserRequest, v1.LoginUserResponse]
 	createUser   *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
-	updateUser   *connect.Client[v1.UpdateUserRequest, v1.UpdateUserResponse]
-	deleteUser   *connect.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
-	getUserByID  *connect.Client[v1.GetUserByIDRequest, v1.GetUserByIDResponse]
-	listUsers    *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
-	followUser   *connect.Client[v1.FollowUserRequest, v1.FollowUserResponse]
-	unfollowUser *connect.Client[v1.UnfollowUserRequest, v1.UnfollowUserResponse]
+	refreshToken *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+}
+
+// LoginUser calls user.v1.UserService.LoginUser.
+func (c *userServiceClient) LoginUser(ctx context.Context, req *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error) {
+	return c.loginUser.CallUnary(ctx, req)
 }
 
 // CreateUser calls user.v1.UserService.CreateUser.
@@ -134,45 +99,16 @@ func (c *userServiceClient) CreateUser(ctx context.Context, req *connect.Request
 	return c.createUser.CallUnary(ctx, req)
 }
 
-// UpdateUser calls user.v1.UserService.UpdateUser.
-func (c *userServiceClient) UpdateUser(ctx context.Context, req *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
-	return c.updateUser.CallUnary(ctx, req)
-}
-
-// DeleteUser calls user.v1.UserService.DeleteUser.
-func (c *userServiceClient) DeleteUser(ctx context.Context, req *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error) {
-	return c.deleteUser.CallUnary(ctx, req)
-}
-
-// GetUserByID calls user.v1.UserService.GetUserByID.
-func (c *userServiceClient) GetUserByID(ctx context.Context, req *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error) {
-	return c.getUserByID.CallUnary(ctx, req)
-}
-
-// ListUsers calls user.v1.UserService.ListUsers.
-func (c *userServiceClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
-	return c.listUsers.CallUnary(ctx, req)
-}
-
-// FollowUser calls user.v1.UserService.FollowUser.
-func (c *userServiceClient) FollowUser(ctx context.Context, req *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error) {
-	return c.followUser.CallUnary(ctx, req)
-}
-
-// UnfollowUser calls user.v1.UserService.UnfollowUser.
-func (c *userServiceClient) UnfollowUser(ctx context.Context, req *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error) {
-	return c.unfollowUser.CallUnary(ctx, req)
+// RefreshToken calls user.v1.UserService.RefreshToken.
+func (c *userServiceClient) RefreshToken(ctx context.Context, req *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error) {
+	return c.refreshToken.CallUnary(ctx, req)
 }
 
 // UserServiceHandler is an implementation of the user.v1.UserService service.
 type UserServiceHandler interface {
+	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
-	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
-	DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error)
-	GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error)
-	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
-	FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error)
-	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
+	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -182,64 +118,32 @@ type UserServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	userServiceMethods := v1.File_user_v1_user_proto.Services().ByName("UserService").Methods()
+	userServiceLoginUserHandler := connect.NewUnaryHandler(
+		UserServiceLoginUserProcedure,
+		svc.LoginUser,
+		connect.WithSchema(userServiceMethods.ByName("LoginUser")),
+		connect.WithHandlerOptions(opts...),
+	)
 	userServiceCreateUserHandler := connect.NewUnaryHandler(
 		UserServiceCreateUserProcedure,
 		svc.CreateUser,
 		connect.WithSchema(userServiceMethods.ByName("CreateUser")),
 		connect.WithHandlerOptions(opts...),
 	)
-	userServiceUpdateUserHandler := connect.NewUnaryHandler(
-		UserServiceUpdateUserProcedure,
-		svc.UpdateUser,
-		connect.WithSchema(userServiceMethods.ByName("UpdateUser")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceDeleteUserHandler := connect.NewUnaryHandler(
-		UserServiceDeleteUserProcedure,
-		svc.DeleteUser,
-		connect.WithSchema(userServiceMethods.ByName("DeleteUser")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceGetUserByIDHandler := connect.NewUnaryHandler(
-		UserServiceGetUserByIDProcedure,
-		svc.GetUserByID,
-		connect.WithSchema(userServiceMethods.ByName("GetUserByID")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceListUsersHandler := connect.NewUnaryHandler(
-		UserServiceListUsersProcedure,
-		svc.ListUsers,
-		connect.WithSchema(userServiceMethods.ByName("ListUsers")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceFollowUserHandler := connect.NewUnaryHandler(
-		UserServiceFollowUserProcedure,
-		svc.FollowUser,
-		connect.WithSchema(userServiceMethods.ByName("FollowUser")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userServiceUnfollowUserHandler := connect.NewUnaryHandler(
-		UserServiceUnfollowUserProcedure,
-		svc.UnfollowUser,
-		connect.WithSchema(userServiceMethods.ByName("UnfollowUser")),
+	userServiceRefreshTokenHandler := connect.NewUnaryHandler(
+		UserServiceRefreshTokenProcedure,
+		svc.RefreshToken,
+		connect.WithSchema(userServiceMethods.ByName("RefreshToken")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/user.v1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case UserServiceLoginUserProcedure:
+			userServiceLoginUserHandler.ServeHTTP(w, r)
 		case UserServiceCreateUserProcedure:
 			userServiceCreateUserHandler.ServeHTTP(w, r)
-		case UserServiceUpdateUserProcedure:
-			userServiceUpdateUserHandler.ServeHTTP(w, r)
-		case UserServiceDeleteUserProcedure:
-			userServiceDeleteUserHandler.ServeHTTP(w, r)
-		case UserServiceGetUserByIDProcedure:
-			userServiceGetUserByIDHandler.ServeHTTP(w, r)
-		case UserServiceListUsersProcedure:
-			userServiceListUsersHandler.ServeHTTP(w, r)
-		case UserServiceFollowUserProcedure:
-			userServiceFollowUserHandler.ServeHTTP(w, r)
-		case UserServiceUnfollowUserProcedure:
-			userServiceUnfollowUserHandler.ServeHTTP(w, r)
+		case UserServiceRefreshTokenProcedure:
+			userServiceRefreshTokenHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -249,30 +153,14 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 // UnimplementedUserServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedUserServiceHandler struct{}
 
+func (UnimplementedUserServiceHandler) LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.LoginUser is not implemented"))
+}
+
 func (UnimplementedUserServiceHandler) CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.CreateUser is not implemented"))
 }
 
-func (UnimplementedUserServiceHandler) UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.UpdateUser is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.DeleteUser is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.GetUserByID is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.ListUsers is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.FollowUser is not implemented"))
-}
-
-func (UnimplementedUserServiceHandler) UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.UnfollowUser is not implemented"))
+func (UnimplementedUserServiceHandler) RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.RefreshToken is not implemented"))
 }

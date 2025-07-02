@@ -4,11 +4,10 @@ processor-server:
   port: 50052
 queue:
   brokers:
-    - "127.0.0.1:9092"
-    - "127.0.0.1:9093"
-    - "127.0.0.1:9094"
-  topic: outbox
-  group_id: processor-service
+    - "kafka-gcp-europewest1.streaming.datastax.com:9093"
+  topic: users-topic
+  group_id: processor-service-group
+  username: witty-tenant
 
 database:
   username: token
