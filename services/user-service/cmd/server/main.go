@@ -26,6 +26,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
+// main initializes and runs the user service server, setting up configuration, logging, database and Redis connections, and handling graceful shutdown.
 func main() {
 
 	// set up logger

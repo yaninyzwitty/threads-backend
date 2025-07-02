@@ -27,6 +27,8 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 )
 
+// main is the entry point for the ConnectRPC server application.
+// It initializes logging, loads configuration and environment variables, sets up the Astra DB and Kafka connections, configures the processor service, starts background worker pools, and runs the HTTP/2 server with graceful shutdown handling.
 func main() {
 	// set up logger
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
