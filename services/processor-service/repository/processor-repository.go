@@ -25,9 +25,8 @@ func NewProcessorRepository(session *gocql.Session, producer *queue.Producer) *P
 func (r *ProcessorRepository) GetOutboxMessages(ctx context.Context, published bool, limit int) ([]*processorv1.OutboxMessage, error) {
 	query := `
 		SELECT event_id, event_type, payload, published
-		FROM outbox
+		FROM threads_keyspace.outbox
 		WHERE published = ?
-		ORDER BY event_id ASC
 		LIMIT ?;
 	`
 
@@ -66,7 +65,7 @@ func (r *ProcessorRepository) PublishEvent(ctx context.Context, event *processor
 
 func (r *ProcessorRepository) MarkEventAsPublished(ctx context.Context, eventId string) error {
 	query := `
-		UPDATE outbox
+		UPDATE threads_keyspace.outbox
 		SET published = true
 		WHERE event_id = ?
 	`

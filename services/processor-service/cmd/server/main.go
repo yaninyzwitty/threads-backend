@@ -19,6 +19,7 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/gen/processor/v1/processorv1connect"
 	"github.com/yaninyzwitty/threads-go-backend/services/processor-service/controller"
 	"github.com/yaninyzwitty/threads-go-backend/services/processor-service/repository"
+	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
 	"github.com/yaninyzwitty/threads-go-backend/shared/pkg"
@@ -35,9 +36,6 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found")
 	}
-
-	// Init helpers (Redis + JWT)
-	helpers.InitHelpers()
 
 	// Load config
 	cfg := pkg.Config{}
@@ -76,9 +74,11 @@ func main() {
 	// create kafka instance
 
 	kafkaConfig := queue.Config{
-		Brokers: cfg.Queue.Brokers,
-		Topic:   cfg.Queue.Topic,
-		GroupID: cfg.Queue.GroupID,
+		Brokers:  cfg.Queue.Brokers,
+		Topic:    cfg.Queue.Topic,
+		GroupID:  cfg.Queue.GroupID,
+		Username: cfg.Queue.Username,
+		Password: helpers.GetEnvOrDefault("KAFKA_PASSWORD", ""),
 	}
 
 	// create kafka producer
@@ -110,7 +110,7 @@ func main() {
 	//build http server from service implementation
 	processorPath, processorHandler := processorv1connect.NewProcessorServiceHandler(
 		processorServiceController,
-		connect.WithInterceptors(helpers.AuthInterceptor()))
+		connect.WithInterceptors(auth.AuthInterceptor()))
 	mux := http.NewServeMux()
 	mux.Handle(processorPath, processorHandler)
 

@@ -23,9 +23,10 @@ type UserServer struct {
 }
 
 type Queue struct {
-	Brokers []string `yaml:"brokers"`
-	Topic   string   `yaml:"topic"`
-	GroupID string   `yaml:"group_id"`
+	Brokers  []string `yaml:"brokers"`
+	Topic    string   `yaml:"topic"`
+	GroupID  string   `yaml:"group_id"`
+	Username string   `yaml:"username"`
 }
 
 type Database struct {

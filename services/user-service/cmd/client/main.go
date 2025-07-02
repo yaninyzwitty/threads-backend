@@ -40,20 +40,19 @@ func main() {
 		httpClient,
 		userServiceUrl,
 	)
-
-	req := connect.NewRequest(&userv1.FollowUserRequest{
-		UserId:      144158279298207350,
-		FollowingId: 143915604384960118,
+	req := connect.NewRequest(&userv1.CreateUserRequest{
+		Username: "test",
+		Email:    "test@test.com",
+		Password: "test",
 	})
-	req.Header().Set("Authorization", "Bearer "+os.Getenv("ZURI_TOKEN"))
 
-	res, err := userServiceClient.FollowUser(context.Background(), req)
+	res, err := userServiceClient.CreateUser(context.Background(), req)
 
 	if err != nil {
 		slog.Error("failed to follow user", "error", err)
 		os.Exit(1)
 	}
 
-	slog.Info("user created", "user", res.Msg.Success)
+	slog.Info("user created", "user", res.Msg.User)
 
 }

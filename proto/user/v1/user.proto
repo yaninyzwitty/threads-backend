@@ -6,7 +6,7 @@ package user.v1;
 import "google/protobuf/timestamp.proto";
 
 message User {
-  int64 id = 1; // bigint from DB
+  int64 id = 1;
   string username = 2;
   string full_name = 3;
   string email = 4;
@@ -15,6 +15,8 @@ message User {
 
   google.protobuf.Timestamp created_at = 7;
   google.protobuf.Timestamp updated_at = 8;
+  string password = 9;
+  
 }
 
 message FollowedEvent {
@@ -29,27 +31,39 @@ message UnfollowedEvent {
   google.protobuf.Timestamp unfollowed_at = 3;
 }
 
-
-message UserTag {
-  int64 id = 1;
-  int64 user_id = 2;
-  string tag = 3;
+message LoginUserRequest {
+  string email = 1;
+  string password = 2;
 }
 
-// === Create ===
+message LoginUserResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
 message CreateUserRequest {
   string username = 1;
   string full_name = 2;
   string email = 3;
   string profile_pic_url = 4;
+  bool is_verified = 5;
+  string password = 6;
 }
 
 message CreateUserResponse {
-  string token = 1;
-  User user = 2;
+  User user = 1;
 }
 
-// === Update ===
+message RefreshTokenRequest {
+  string refresh_token = 1;
+  int64 user_id = 2;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
 message UpdateUserRequest {
   int64 id = 1;
   string username = 2;
@@ -60,15 +74,6 @@ message UpdateUserRequest {
 
 message UpdateUserResponse {
   User user = 1;
-}
-
-// === Delete ===
-message DeleteUserRequest {
-  int64 id = 1;
-}
-
-message DeleteUserResponse {
-  bool success = 1;
 }
 
 // === Get ===
@@ -93,7 +98,6 @@ message ListUsersResponse {
 }
 
 message FollowUserRequest {
-  int64 user_id = 1;
   int64 following_id = 2;
 }
 
@@ -102,7 +106,6 @@ message FollowUserResponse {
 } 
 
 message UnfollowUserRequest {
-  int64 user_id = 1;
   int64 following_id = 2;
 }
 
@@ -110,13 +113,30 @@ message UnfollowUserResponse {
   bool success = 1;
 }
 
-// === Service ===
+
+
+// === Delete ===
+message DeleteUserRequest {
+  int64 id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+
+
+
 service UserService {
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
   rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc FollowUser(FollowUserRequest) returns (FollowUserResponse);
   rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowUserResponse);
+ 
+
 }
