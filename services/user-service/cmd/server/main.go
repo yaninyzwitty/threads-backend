@@ -27,6 +27,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // main initializes and runs the user service server, setting up configuration, logging, database and Redis connections, and handling graceful shutdown.
@@ -118,27 +119,67 @@ func main() {
 	go func() {
 		eventHandler := map[string]func([]byte) error{
 			"user.followed": func(b []byte) error {
-				// TODO - use outbox event
-				var event userv1.FollowedEvent
+				// Step 1: Decode JSON into OutboxEvent
+				var event userv1.OutboxEvent
 				if err := protojson.Unmarshal(b, &event); err != nil {
-					return fmt.Errorf("unmarshal error: %w", err)
+					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
 				}
+
+				// Step 2: Extract and validate OutboxMessage
+				outboxMessage := event.GetOutboxMessage()
+				if outboxMessage == nil {
+					return fmt.Errorf("missing outbox_message in OutboxEvent")
+				}
+
+				// Step 3: Decode the binary payload into FollowedEvent
+				var followedEvent userv1.FollowedEvent
+				if err := proto.Unmarshal(outboxMessage.GetPayload(), &followedEvent); err != nil {
+					return fmt.Errorf("failed to unmarshal FollowedEvent payload: %w", err)
+				}
+
+				// Step 4: Call the domain logic (controller)
 				_, err := userController.IncrementFollowingAndFollowerCount(ctx,
 					connect.NewRequest(&userv1.IncrementFollowingAndFollowerCountRequest{
-						FollowedEvent: &event,
+						FollowedEvent: &followedEvent,
 					}))
-				return err
-			},
-			"user.unfollowed": func(b []byte) error {
-				var event userv1.UnfollowedEvent
-				if err := protojson.Unmarshal(b, &event); err != nil {
-					return fmt.Errorf("unmarshal error: %w", err)
+				if err != nil {
+					return fmt.Errorf("failed to increment following/follower count: %w", err)
 				}
+
+				return nil
+			},
+
+			"user.unfollowed": func(b []byte) error {
+				// Step 1: Decode JSON into OutboxEvent
+				var event userv1.OutboxEvent
+				if err := protojson.Unmarshal(b, &event); err != nil {
+					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
+				}
+
+				// Step 2: Extract and validate OutboxMessage
+				outboxMessage := event.GetOutboxMessage()
+				if outboxMessage == nil {
+					return fmt.Errorf("missing outbox_message in OutboxEvent")
+				}
+
+				// Step 3: Decode the binary payload into UnFollowedEvent
+				var unfollowedEvent userv1.UnfollowedEvent
+				if err := proto.Unmarshal(outboxMessage.GetPayload(), &unfollowedEvent); err != nil {
+					return fmt.Errorf("failed to unmarshal FollowedEvent payload: %w", err)
+				}
+
+				// Step 4: Call the domain logic (controller)
+
 				_, err := userController.DecrementFollowingAndFollowerCount(ctx,
 					connect.NewRequest(&userv1.DecrementFollowingAndFollowerCountRequest{
-						UnfollowedEvent: &event,
+						UnfollowedEvent: &unfollowedEvent,
 					}))
-				return err
+
+				if err != nil {
+					return fmt.Errorf("failed to decrement following/follower count: %w", err)
+				}
+
+				return nil
 			},
 		}
 
