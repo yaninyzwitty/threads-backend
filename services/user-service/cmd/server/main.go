@@ -165,7 +165,7 @@ func main() {
 				// Step 3: Decode the binary payload into UnFollowedEvent
 				var unfollowedEvent userv1.UnfollowedEvent
 				if err := proto.Unmarshal(outboxMessage.GetPayload(), &unfollowedEvent); err != nil {
-					return fmt.Errorf("failed to unmarshal FollowedEvent payload: %w", err)
+					return fmt.Errorf("failed to unmarshal UnfollowedEvent payload: %w", err)
 				}
 
 				// Step 4: Call the domain logic (controller)
