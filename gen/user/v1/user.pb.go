@@ -132,9 +132,10 @@ func (x *User) GetPassword() string {
 
 type FollowedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // TODO-remove
-	FollowingId   int64                  `protobuf:"varint,2,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
-	FollowedAt    *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=followed_at,json=followedAt,proto3" json:"followed_at,omitempty"`
+	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // TODO-remove
+	FollowingId   int64                  `protobuf:"varint,3,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
+	FollowedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=followed_at,json=followedAt,proto3" json:"followed_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -169,6 +170,13 @@ func (*FollowedEvent) Descriptor() ([]byte, []int) {
 	return file_user_v1_user_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *FollowedEvent) GetEventId() string {
+	if x != nil {
+		return x.EventId
+	}
+	return ""
+}
+
 func (x *FollowedEvent) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
@@ -192,9 +200,10 @@ func (x *FollowedEvent) GetFollowedAt() *timestamppb.Timestamp {
 
 type UnfollowedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	FollowingId   int64                  `protobuf:"varint,2,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
-	UnfollowedAt  *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=unfollowed_at,json=unfollowedAt,proto3" json:"unfollowed_at,omitempty"`
+	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FollowingId   int64                  `protobuf:"varint,3,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
+	UnfollowedAt  *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=unfollowed_at,json=unfollowedAt,proto3" json:"unfollowed_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -227,6 +236,13 @@ func (x *UnfollowedEvent) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UnfollowedEvent.ProtoReflect.Descriptor instead.
 func (*UnfollowedEvent) Descriptor() ([]byte, []int) {
 	return file_user_v1_user_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UnfollowedEvent) GetEventId() string {
+	if x != nil {
+		return x.EventId
+	}
+	return ""
 }
 
 func (x *UnfollowedEvent) GetUserId() int64 {
@@ -1165,6 +1181,182 @@ func (x *DeleteUserResponse) GetSuccess() bool {
 	return false
 }
 
+type IncrementFollowingAndFollowerCountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FollowedEvent *FollowedEvent         `protobuf:"bytes,1,opt,name=followed_event,json=followedEvent,proto3" json:"followed_event,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrementFollowingAndFollowerCountRequest) Reset() {
+	*x = IncrementFollowingAndFollowerCountRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrementFollowingAndFollowerCountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrementFollowingAndFollowerCountRequest) ProtoMessage() {}
+
+func (x *IncrementFollowingAndFollowerCountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrementFollowingAndFollowerCountRequest.ProtoReflect.Descriptor instead.
+func (*IncrementFollowingAndFollowerCountRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *IncrementFollowingAndFollowerCountRequest) GetFollowedEvent() *FollowedEvent {
+	if x != nil {
+		return x.FollowedEvent
+	}
+	return nil
+}
+
+type IncrementFollowingAndFollowerCountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Incremented   bool                   `protobuf:"varint,1,opt,name=incremented,proto3" json:"incremented,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrementFollowingAndFollowerCountResponse) Reset() {
+	*x = IncrementFollowingAndFollowerCountResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrementFollowingAndFollowerCountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrementFollowingAndFollowerCountResponse) ProtoMessage() {}
+
+func (x *IncrementFollowingAndFollowerCountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrementFollowingAndFollowerCountResponse.ProtoReflect.Descriptor instead.
+func (*IncrementFollowingAndFollowerCountResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *IncrementFollowingAndFollowerCountResponse) GetIncremented() bool {
+	if x != nil {
+		return x.Incremented
+	}
+	return false
+}
+
+type DecrementFollowingAndFollowerCountRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	UnfollowedEvent *UnfollowedEvent       `protobuf:"bytes,1,opt,name=unfollowed_event,json=unfollowedEvent,proto3" json:"unfollowed_event,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *DecrementFollowingAndFollowerCountRequest) Reset() {
+	*x = DecrementFollowingAndFollowerCountRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DecrementFollowingAndFollowerCountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DecrementFollowingAndFollowerCountRequest) ProtoMessage() {}
+
+func (x *DecrementFollowingAndFollowerCountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DecrementFollowingAndFollowerCountRequest.ProtoReflect.Descriptor instead.
+func (*DecrementFollowingAndFollowerCountRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *DecrementFollowingAndFollowerCountRequest) GetUnfollowedEvent() *UnfollowedEvent {
+	if x != nil {
+		return x.UnfollowedEvent
+	}
+	return nil
+}
+
+type DecrementFollowingAndFollowerCountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Decremented   bool                   `protobuf:"varint,1,opt,name=decremented,proto3" json:"decremented,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DecrementFollowingAndFollowerCountResponse) Reset() {
+	*x = DecrementFollowingAndFollowerCountResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DecrementFollowingAndFollowerCountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DecrementFollowingAndFollowerCountResponse) ProtoMessage() {}
+
+func (x *DecrementFollowingAndFollowerCountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DecrementFollowingAndFollowerCountResponse.ProtoReflect.Descriptor instead.
+func (*DecrementFollowingAndFollowerCountResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *DecrementFollowingAndFollowerCountResponse) GetDecremented() bool {
+	if x != nil {
+		return x.Decremented
+	}
+	return false
+}
+
 var File_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_user_v1_user_proto_rawDesc = "" +
@@ -1182,16 +1374,18 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x1a\n" +
-	"\bpassword\x18\t \x01(\tR\bpassword\"\x88\x01\n" +
-	"\rFollowedEvent\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
-	"\ffollowing_id\x18\x02 \x01(\x03R\vfollowingId\x12;\n" +
-	"\vfollowed_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"followedAt\"\x8e\x01\n" +
-	"\x0fUnfollowedEvent\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
-	"\ffollowing_id\x18\x02 \x01(\x03R\vfollowingId\x12?\n" +
-	"\runfollowed_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\funfollowedAt\"D\n" +
+	"\bpassword\x18\t \x01(\tR\bpassword\"\xa3\x01\n" +
+	"\rFollowedEvent\x12\x19\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12!\n" +
+	"\ffollowing_id\x18\x03 \x01(\x03R\vfollowingId\x12;\n" +
+	"\vfollowed_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"followedAt\"\xa9\x01\n" +
+	"\x0fUnfollowedEvent\x12\x19\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12!\n" +
+	"\ffollowing_id\x18\x03 \x01(\x03R\vfollowingId\x12?\n" +
+	"\runfollowed_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\funfollowedAt\"D\n" +
 	"\x10LoginUserRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"[\n" +
@@ -1244,7 +1438,15 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\x11DeleteUserRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\".\n" +
 	"\x12DeleteUserResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\x95\x05\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"j\n" +
+	")IncrementFollowingAndFollowerCountRequest\x12=\n" +
+	"\x0efollowed_event\x18\x01 \x01(\v2\x16.user.v1.FollowedEventR\rfollowedEvent\"N\n" +
+	"*IncrementFollowingAndFollowerCountResponse\x12 \n" +
+	"\vincremented\x18\x01 \x01(\bR\vincremented\"p\n" +
+	")DecrementFollowingAndFollowerCountRequest\x12C\n" +
+	"\x10unfollowed_event\x18\x01 \x01(\v2\x18.user.v1.UnfollowedEventR\x0funfollowedEvent\"N\n" +
+	"*DecrementFollowingAndFollowerCountResponse\x12 \n" +
+	"\vdecremented\x18\x01 \x01(\bR\vdecremented2\xb5\a\n" +
 	"\vUserService\x12B\n" +
 	"\tLoginUser\x12\x19.user.v1.LoginUserRequest\x1a\x1a.user.v1.LoginUserResponse\x12E\n" +
 	"\n" +
@@ -1258,7 +1460,9 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\tListUsers\x12\x19.user.v1.ListUsersRequest\x1a\x1a.user.v1.ListUsersResponse\x12E\n" +
 	"\n" +
 	"FollowUser\x12\x1a.user.v1.FollowUserRequest\x1a\x1b.user.v1.FollowUserResponse\x12K\n" +
-	"\fUnfollowUser\x12\x1c.user.v1.UnfollowUserRequest\x1a\x1d.user.v1.UnfollowUserResponseB\x8a\x01\n" +
+	"\fUnfollowUser\x12\x1c.user.v1.UnfollowUserRequest\x1a\x1d.user.v1.UnfollowUserResponse\x12\x8d\x01\n" +
+	"\"IncrementFollowingAndFollowerCount\x122.user.v1.IncrementFollowingAndFollowerCountRequest\x1a3.user.v1.IncrementFollowingAndFollowerCountResponse\x12\x8d\x01\n" +
+	"\"DecrementFollowingAndFollowerCount\x122.user.v1.DecrementFollowingAndFollowerCountRequest\x1a3.user.v1.DecrementFollowingAndFollowerCountResponseB\x8a\x01\n" +
 	"\vcom.user.v1B\tUserProtoP\x01Z3github.com/bufbuild/buf-examples/gen/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
@@ -1273,63 +1477,73 @@ func file_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_user_v1_user_proto_rawDescData
 }
 
-var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_user_v1_user_proto_goTypes = []any{
-	(*User)(nil),                  // 0: user.v1.User
-	(*FollowedEvent)(nil),         // 1: user.v1.FollowedEvent
-	(*UnfollowedEvent)(nil),       // 2: user.v1.UnfollowedEvent
-	(*LoginUserRequest)(nil),      // 3: user.v1.LoginUserRequest
-	(*LoginUserResponse)(nil),     // 4: user.v1.LoginUserResponse
-	(*CreateUserRequest)(nil),     // 5: user.v1.CreateUserRequest
-	(*CreateUserResponse)(nil),    // 6: user.v1.CreateUserResponse
-	(*RefreshTokenRequest)(nil),   // 7: user.v1.RefreshTokenRequest
-	(*RefreshTokenResponse)(nil),  // 8: user.v1.RefreshTokenResponse
-	(*UpdateUserRequest)(nil),     // 9: user.v1.UpdateUserRequest
-	(*UpdateUserResponse)(nil),    // 10: user.v1.UpdateUserResponse
-	(*GetUserByIDRequest)(nil),    // 11: user.v1.GetUserByIDRequest
-	(*GetUserByIDResponse)(nil),   // 12: user.v1.GetUserByIDResponse
-	(*ListUsersRequest)(nil),      // 13: user.v1.ListUsersRequest
-	(*ListUsersResponse)(nil),     // 14: user.v1.ListUsersResponse
-	(*FollowUserRequest)(nil),     // 15: user.v1.FollowUserRequest
-	(*FollowUserResponse)(nil),    // 16: user.v1.FollowUserResponse
-	(*UnfollowUserRequest)(nil),   // 17: user.v1.UnfollowUserRequest
-	(*UnfollowUserResponse)(nil),  // 18: user.v1.UnfollowUserResponse
-	(*DeleteUserRequest)(nil),     // 19: user.v1.DeleteUserRequest
-	(*DeleteUserResponse)(nil),    // 20: user.v1.DeleteUserResponse
-	(*timestamppb.Timestamp)(nil), // 21: google.protobuf.Timestamp
+	(*User)(nil),                                       // 0: user.v1.User
+	(*FollowedEvent)(nil),                              // 1: user.v1.FollowedEvent
+	(*UnfollowedEvent)(nil),                            // 2: user.v1.UnfollowedEvent
+	(*LoginUserRequest)(nil),                           // 3: user.v1.LoginUserRequest
+	(*LoginUserResponse)(nil),                          // 4: user.v1.LoginUserResponse
+	(*CreateUserRequest)(nil),                          // 5: user.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),                         // 6: user.v1.CreateUserResponse
+	(*RefreshTokenRequest)(nil),                        // 7: user.v1.RefreshTokenRequest
+	(*RefreshTokenResponse)(nil),                       // 8: user.v1.RefreshTokenResponse
+	(*UpdateUserRequest)(nil),                          // 9: user.v1.UpdateUserRequest
+	(*UpdateUserResponse)(nil),                         // 10: user.v1.UpdateUserResponse
+	(*GetUserByIDRequest)(nil),                         // 11: user.v1.GetUserByIDRequest
+	(*GetUserByIDResponse)(nil),                        // 12: user.v1.GetUserByIDResponse
+	(*ListUsersRequest)(nil),                           // 13: user.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),                          // 14: user.v1.ListUsersResponse
+	(*FollowUserRequest)(nil),                          // 15: user.v1.FollowUserRequest
+	(*FollowUserResponse)(nil),                         // 16: user.v1.FollowUserResponse
+	(*UnfollowUserRequest)(nil),                        // 17: user.v1.UnfollowUserRequest
+	(*UnfollowUserResponse)(nil),                       // 18: user.v1.UnfollowUserResponse
+	(*DeleteUserRequest)(nil),                          // 19: user.v1.DeleteUserRequest
+	(*DeleteUserResponse)(nil),                         // 20: user.v1.DeleteUserResponse
+	(*IncrementFollowingAndFollowerCountRequest)(nil),  // 21: user.v1.IncrementFollowingAndFollowerCountRequest
+	(*IncrementFollowingAndFollowerCountResponse)(nil), // 22: user.v1.IncrementFollowingAndFollowerCountResponse
+	(*DecrementFollowingAndFollowerCountRequest)(nil),  // 23: user.v1.DecrementFollowingAndFollowerCountRequest
+	(*DecrementFollowingAndFollowerCountResponse)(nil), // 24: user.v1.DecrementFollowingAndFollowerCountResponse
+	(*timestamppb.Timestamp)(nil),                      // 25: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
-	21, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	21, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 2: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
-	21, // 3: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
+	25, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	25, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 2: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
+	25, // 3: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
 	0,  // 4: user.v1.CreateUserResponse.user:type_name -> user.v1.User
 	0,  // 5: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
 	0,  // 6: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
 	0,  // 7: user.v1.ListUsersResponse.users:type_name -> user.v1.User
-	3,  // 8: user.v1.UserService.LoginUser:input_type -> user.v1.LoginUserRequest
-	5,  // 9: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
-	7,  // 10: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
-	9,  // 11: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
-	19, // 12: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
-	11, // 13: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
-	13, // 14: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
-	15, // 15: user.v1.UserService.FollowUser:input_type -> user.v1.FollowUserRequest
-	17, // 16: user.v1.UserService.UnfollowUser:input_type -> user.v1.UnfollowUserRequest
-	4,  // 17: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
-	6,  // 18: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
-	8,  // 19: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
-	10, // 20: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
-	20, // 21: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
-	12, // 22: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	14, // 23: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
-	16, // 24: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
-	18, // 25: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
-	17, // [17:26] is the sub-list for method output_type
-	8,  // [8:17] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	1,  // 8: user.v1.IncrementFollowingAndFollowerCountRequest.followed_event:type_name -> user.v1.FollowedEvent
+	2,  // 9: user.v1.DecrementFollowingAndFollowerCountRequest.unfollowed_event:type_name -> user.v1.UnfollowedEvent
+	3,  // 10: user.v1.UserService.LoginUser:input_type -> user.v1.LoginUserRequest
+	5,  // 11: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
+	7,  // 12: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
+	9,  // 13: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
+	19, // 14: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
+	11, // 15: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
+	13, // 16: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
+	15, // 17: user.v1.UserService.FollowUser:input_type -> user.v1.FollowUserRequest
+	17, // 18: user.v1.UserService.UnfollowUser:input_type -> user.v1.UnfollowUserRequest
+	21, // 19: user.v1.UserService.IncrementFollowingAndFollowerCount:input_type -> user.v1.IncrementFollowingAndFollowerCountRequest
+	23, // 20: user.v1.UserService.DecrementFollowingAndFollowerCount:input_type -> user.v1.DecrementFollowingAndFollowerCountRequest
+	4,  // 21: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
+	6,  // 22: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
+	8,  // 23: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
+	10, // 24: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
+	20, // 25: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
+	12, // 26: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	14, // 27: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
+	16, // 28: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
+	18, // 29: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
+	22, // 30: user.v1.UserService.IncrementFollowingAndFollowerCount:output_type -> user.v1.IncrementFollowingAndFollowerCountResponse
+	24, // 31: user.v1.UserService.DecrementFollowingAndFollowerCount:output_type -> user.v1.DecrementFollowingAndFollowerCountResponse
+	21, // [21:32] is the sub-list for method output_type
+	10, // [10:21] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_user_v1_user_proto_init() }
@@ -1343,7 +1557,7 @@ func file_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_v1_user_proto_rawDesc), len(file_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

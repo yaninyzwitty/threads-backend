@@ -31,13 +31,13 @@ func generateRefreshToken() (string, error) {
 
 // Create and store Refresh Token
 
-func (r *RefreshTokenStore) CreateRefreshToken(ctx context.Context, userID string) (string, error) {
+func (r *RefreshTokenStore) CreateRefreshToken(ctx context.Context, userID int64) (string, error) {
 	token, err := generateRefreshToken()
 	if err != nil {
 		return "", err
 	}
 
-	key := fmt.Sprintf("refresh:%s:%s", userID, token)
+	key := fmt.Sprintf("refresh:%d:%s", userID, token)
 	err = r.Redis.Set(ctx, key, "valid", 7*24*time.Hour).Err()
 	if err != nil {
 		return "", err
@@ -47,24 +47,50 @@ func (r *RefreshTokenStore) CreateRefreshToken(ctx context.Context, userID strin
 
 }
 
-// Validate Refresh Token
+// Store only one refresh token per user
+func (r *RefreshTokenStore) CreateOrGetRefreshToken(ctx context.Context, userID int64) (string, error) {
+	key := fmt.Sprintf("refresh:%d", userID)
 
-func (r *RefreshTokenStore) ValidateRefreshToken(ctx context.Context, userID, token string) (bool, error) {
-	key := fmt.Sprintf("refresh:%s:%s", userID, token)
+	// Try to get existing token
+	val, err := r.Redis.Get(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		return "", err
+	}
 
-	res, err := r.Redis.Get(ctx, key).Result()
+	if err == nil {
+		// token exists
+		return val, nil
+	}
+
+	// Else create and set
+	token, err := generateRefreshToken()
+	if err != nil {
+		return "", err
+	}
+
+	err = r.Redis.Set(ctx, key, token, 7*24*time.Hour).Err()
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (r *RefreshTokenStore) ValidateRefreshToken(ctx context.Context, userID int64, token string) (bool, error) {
+	key := fmt.Sprintf("refresh:%d", userID)
+	val, err := r.Redis.Get(ctx, key).Result()
 
 	if err == redis.Nil {
 		return false, nil
 	}
+	if err != nil {
+		return false, err
+	}
 
-	return res == "valid", nil
+	return val == token, nil
 }
 
-// Delete Refresh Token (Logout)
-
-func (r *RefreshTokenStore) DeleteRefreshToken(ctx context.Context, userID, token string) error {
-	key := fmt.Sprintf("refresh:%s:%s", userID, token)
+func (r *RefreshTokenStore) DeleteRefreshToken(ctx context.Context, userID int64) error {
+	key := fmt.Sprintf("refresh:%d", userID)
 	return r.Redis.Del(ctx, key).Err()
-
 }

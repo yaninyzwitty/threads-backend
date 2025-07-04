@@ -23,7 +23,7 @@ type Claims struct {
 }
 
 // generate new JWT TOKEN
-func GenerateJWT_Token(userID int64, email string, username string, fullName string) (string, error) {
+func GenerateJWTToken(userID int64, email string, username string, fullName string) (string, error) {
 	claims := &Claims{
 		UserID:   userID,
 		Email:    email,
@@ -45,7 +45,7 @@ func GenerateJWT_Token(userID int64, email string, username string, fullName str
 }
 
 // Validate JWT Token parses and validates the token
-func ValidateJWT_Token(tokenString string) (*Claims, error) {
+func ValidateJWTToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])

@@ -22,9 +22,9 @@ func NewUserRepository(session *gocql.Session) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user *userv1.User) error {
-	query := `INSERT INTO threads_keyspace.users (id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at) VALUES(?, ?, ?, ?, ?, false, ?, ?)`
+	query := `INSERT INTO threads_keyspace.users (id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at, password) VALUES(?, ?, ?, ?, ?, false, ?, ?, ?)`
 
-	return r.session.Query(query, user.Id, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.CreatedAt.AsTime(), user.UpdatedAt.AsTime()).Exec()
+	return r.session.Query(query, user.Id, user.Username, user.FullName, user.Email, user.ProfilePicUrl, user.CreatedAt.AsTime(), user.UpdatedAt.AsTime(), user.Password).Exec()
 
 }
 
@@ -39,10 +39,10 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int64) error {
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*userv1.User, error) {
-	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_keyspace.users WHERE id = ?`
+	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at, password FROM threads_keyspace.users WHERE id = ?`
 	var user userv1.User
 	var createdAt, updatedAt time.Time
-	err := r.session.Query(query, id).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt)
+	err := r.session.Query(query, id).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -52,10 +52,10 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*userv1.Use
 	return &user, nil
 }
 func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*userv1.User, error) {
-	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at FROM threads_keyspace.users WHERE email = ?`
+	query := `SELECT id, username, full_name, email, profile_pic_url, is_verified, created_at, updated_at, password FROM threads_keyspace.users WHERE email = ?`
 	var user userv1.User
 	var createdAt, updatedAt time.Time
-	err := r.session.Query(query, email).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt)
+	err := r.session.Query(query, email).Scan(&user.Id, &user.Username, &user.FullName, &user.Email, &user.ProfilePicUrl, &user.IsVerified, &createdAt, &updatedAt, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -123,49 +123,45 @@ func (r *UserRepository) ListUsers(
 	return users, nextPageState, nil
 }
 
-func (r *UserRepository) FollowUser(ctx context.Context, userID, followingID int64, now time.Time) error {
-
+func (r *UserRepository) SaveFollowRelationAndEmitEvent(ctx context.Context, userID, followingID int64, now time.Time) error {
 	if userID == followingID {
 		return fmt.Errorf("user cannot follow themselves")
 	}
 
-	followUserQuery := `INSERT INTO threads_keyspace.followers_by_user (user_id, follower_id, followed_at) VALUES (?, ?, ?)`
+	const (
+		followingQuery = `INSERT INTO threads_keyspace.following_by_user (user_id, following_id, following_at) VALUES (?, ?, ?)`
+		followerQuery  = `INSERT INTO threads_keyspace.followers_by_user (user_id, follower_id, followed_at) VALUES (?, ?, ?)`
+		outboxQuery    = `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false) USING TTL 86400`
+		eventType      = "user.followed"
+	)
 
-	outboxQuery := `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false) USING TTL 86400`
+	batch := r.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
 
-	// use batch to store data in both outbox table and followings table
-	const evtType = "user.followed"
+	// Insert into both tables
+	batch.Query(followingQuery, userID, followingID, now)
+	batch.Query(followerQuery, followingID, userID, now)
 
-	// create a batch to store data in both outbox table and followings table
-	loggedBatch := r.session.NewBatch(gocql.LoggedBatch)
-
-	// attach context
-	loggedBatch.WithContext(ctx)
-
-	loggedBatch.Query(followUserQuery, userID, followingID, now) // insert to the following table
-
+	// Event payload
 	payload, err := protojson.Marshal(&userv1.FollowedEvent{
 		UserId:      userID,
 		FollowingId: followingID,
 		FollowedAt:  timestamppb.New(now),
 	})
-
 	if err != nil {
-		return fmt.Errorf("failed to marshal payload: %w", err)
+		return fmt.Errorf("failed to marshal follow event: %w", err)
 	}
 
-	loggedBatch.Query(outboxQuery, evtType, payload) // insert to the outbox table
+	// Add to outbox
+	batch.Query(outboxQuery, eventType, payload)
 
-	// execute the batch
-	if err := r.session.ExecuteBatch(loggedBatch); err != nil {
-		return fmt.Errorf("failed to execute batch: %w", err)
+	if err := r.session.ExecuteBatch(batch); err != nil {
+		return fmt.Errorf("failed to execute follow batch: %w", err)
 	}
 
 	return nil
-
 }
 
-func (r *UserRepository) UnfollowUser(ctx context.Context, userID, followingID int64, now time.Time) error {
+func (r *UserRepository) UnfollowUser(ctx context.Context, followerID, userId int64, now time.Time) error {
 	// SQL queries
 	unfollowQuery := `
 		DELETE FROM threads_keyspace.followers_by_user 
@@ -182,12 +178,12 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, userID, followingID i
 	loggedBatch.WithContext(ctx)
 
 	// Add unfollow delete query
-	loggedBatch.Query(unfollowQuery, userID, followingID)
+	loggedBatch.Query(unfollowQuery, userId, followerID)
 
 	// Marshal the event payload
 	payload, err := protojson.Marshal(&userv1.UnfollowedEvent{
-		UserId:       userID,
-		FollowingId:  followingID,
+		UserId:       userId,
+		FollowingId:  followerID,
 		UnfollowedAt: timestamppb.New(now),
 	})
 	if err != nil {
@@ -203,4 +199,23 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, userID, followingID i
 	}
 
 	return nil
+}
+
+func (r *UserRepository) IncrementFollowingCount(ctx context.Context, userId int64) error {
+	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count + 1 WHERE user_id = ?`
+	return r.session.Query(query, userId).WithContext(ctx).Exec()
+}
+
+func (r *UserRepository) IncrementFollowerCount(ctx context.Context, recipientId int64) error {
+	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count + 1 WHERE user_id = ?`
+	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
+}
+func (r *UserRepository) DecrementFollowingCount(ctx context.Context, userId int64) error {
+	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count - 1 WHERE user_id = ?`
+	return r.session.Query(query, userId).WithContext(ctx).Exec()
+}
+
+func (r *UserRepository) DecrementFollowerCount(ctx context.Context, recipientId int64) error {
+	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count - 1 WHERE user_id = ?`
+	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
 }
