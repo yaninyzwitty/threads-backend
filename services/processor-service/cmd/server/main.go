@@ -30,10 +30,6 @@ import (
 // main is the entry point for the ConnectRPC server application.
 // It initializes logging, loads configuration and environment variables, sets up the Astra DB and Kafka connections, configures the processor service, starts background worker pools, and runs the HTTP/2 server with graceful shutdown handling.
 func main() {
-	// set up logger
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})))
 
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found")

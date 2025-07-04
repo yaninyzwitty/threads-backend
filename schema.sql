@@ -47,11 +47,14 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.following_by_user  (
     PRIMARY KEY (user_id, following_id)
 );
 
-CREATE TABLE threads_keyspace.follower_counts (
+CREATE TABLE IF NOT EXISTS threads_keyspace.follower_counts (
     user_id bigint PRIMARY KEY,
     follower_count counter,
     following_count counter
 );
+
+
+
 
 -- create outbox table
 CREATE TABLE IF NOT EXISTS threads_keyspace.outbox (

@@ -60,7 +60,10 @@ func (r *ProcessorRepository) PublishEvent(ctx context.Context, event *processor
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	return r.producer.Publish(ctx, event.EventId, payload)
+	// use different keys for parallelism
+	eventKey := fmt.Sprintf("%s:%s", event.EventType, event.EventId) // ie 0197d503-4fa6-7acf-8815-2e6c9dba194f:user.followed
+
+	return r.producer.Publish(ctx, eventKey, payload)
 }
 
 func (r *ProcessorRepository) MarkEventAsPublished(ctx context.Context, eventId string) error {

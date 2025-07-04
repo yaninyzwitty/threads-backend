@@ -21,13 +21,25 @@ func AuthInterceptor() connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(uf connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 
-			publicRoutes := []string{"CreateUser", "RefreshToken"}
+			// Define public,
+			publicRoutes := map[string]struct{}{
+				"CreateUser":   {},
+				"LoginUser":    {},
+				"RefreshToken": {},
+			}
 
-			// Allow unauthenticated access to CreateUser and RefreshToken
-			for _, route := range publicRoutes {
-				if strings.HasSuffix(req.Spec().Procedure, route) {
-					return uf(ctx, req)
-				}
+			fullMethod := strings.TrimSpace(req.Spec().Procedure) // e.g., "/user.v1.UserService/LoginUser"
+			methodParts := strings.Split(fullMethod, "/")
+
+			if len(methodParts) < 2 {
+				return nil, connect.NewError(connect.CodeInternal, errors.New("invalid method format"))
+			}
+
+			methodName := methodParts[len(methodParts)-1] // e.g., "LoginUser"
+
+			// Check if it's a public route
+			if _, ok := publicRoutes[methodName]; ok {
+				return uf(ctx, req)
 			}
 
 			authHeader := req.Header().Get("Authorization")
@@ -45,7 +57,7 @@ func AuthInterceptor() connect.Interceptor {
 				return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("empty token"))
 			}
 
-			claims, err := ValidateJWT_Token(token)
+			claims, err := ValidateJWTToken(token)
 			if err != nil {
 				return nil, connect.NewError(connect.CodeUnauthenticated, err)
 			}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"connectrpc.com/connect"
@@ -13,6 +12,7 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -90,13 +90,12 @@ func (c *UserController) LoginUser(
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("invalid credentials"))
 	}
 
-	accessToken, err := auth.GenerateJWT_Token(user.Id, user.Email, user.Username, user.FullName)
+	accessToken, err := auth.GenerateJWTToken(user.Id, user.Email, user.Username, user.FullName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate token"))
 	}
 
-	userIdStr := strconv.FormatInt(user.Id, 10)
-	refreshToken, err := c.store.CreateRefreshToken(ctx, userIdStr)
+	refreshToken, err := c.store.CreateOrGetRefreshToken(ctx, user.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate refresh token"))
 	}
@@ -146,6 +145,15 @@ func (c *UserController) DeleteUser(
 
 	if req.Msg.Id == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
+	}
+
+	user, err := auth.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
+	}
+
+	if user.Id != req.Msg.Id {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("unauthorized deletion"))
 	}
 
 	if err := c.userRepo.DeleteUser(ctx, req.Msg.Id); err != nil {
@@ -204,10 +212,12 @@ func (c *UserController) FollowUser(
 	req *connect.Request[userv1.FollowUserRequest],
 ) (*connect.Response[userv1.FollowUserResponse], error) {
 
+	// Validate target user
 	if req.Msg.FollowingId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
+	// Get authenticated user
 	userFromCtx, err := auth.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
@@ -217,7 +227,10 @@ func (c *UserController) FollowUser(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("cannot follow yourself"))
 	}
 
-	if err := c.userRepo.FollowUser(ctx, userFromCtx.Id, req.Msg.FollowingId, time.Now()); err != nil {
+	// Current timestamp
+	now := time.Now()
+
+	if err := c.userRepo.SaveFollowRelationAndEmitEvent(ctx, userFromCtx.Id, req.Msg.FollowingId, now); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to follow user: %w", err))
 	}
 
@@ -260,9 +273,7 @@ func (c *UserController) RefreshToken(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
-	userIdStr := strconv.FormatInt(req.Msg.UserId, 10)
-
-	valid, err := c.store.ValidateRefreshToken(ctx, req.Msg.RefreshToken, userIdStr)
+	valid, err := c.store.ValidateRefreshToken(ctx, req.Msg.UserId, req.Msg.RefreshToken)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to validate refresh token: %w", err))
 	}
@@ -275,21 +286,97 @@ func (c *UserController) RefreshToken(
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get user: %w", err))
 	}
 
-	accessToken, err := auth.GenerateJWT_Token(user.Id, user.Email, user.Username, user.FullName)
+	accessToken, err := auth.GenerateJWTToken(user.Id, user.Email, user.Username, user.FullName)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate access token"))
 	}
+	// Rotate: delete old token
+	if err := c.store.DeleteRefreshToken(ctx, req.Msg.UserId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to delete old refresh token: %w", err))
+	}
 
-	newRefreshToken, err := c.store.CreateRefreshToken(ctx, userIdStr)
+	newRefreshToken, err := c.store.CreateOrGetRefreshToken(ctx, req.Msg.UserId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to create refresh token"))
 	}
-
-	// Rotate: delete old token
-	_ = c.store.DeleteRefreshToken(ctx, userIdStr, req.Msg.RefreshToken)
 
 	return connect.NewResponse(&userv1.RefreshTokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
 	}), nil
+}
+
+func (c *UserController) IncrementFollowingAndFollowerCount(
+	ctx context.Context,
+	req *connect.Request[userv1.IncrementFollowingAndFollowerCountRequest],
+) (*connect.Response[userv1.IncrementFollowingAndFollowerCountResponse], error) {
+	event := req.Msg.GetFollowedEvent()
+
+	if event == nil || event.FollowedAt == nil || event.UserId == 0 || event.FollowingId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("followed event is missing or invalid"))
+	}
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	// Increment following count (for the user performing the follow)
+	g.Go(func() error {
+		if err := c.userRepo.IncrementFollowingCount(ctx, event.UserId); err != nil {
+			return fmt.Errorf("failed to increment following count: %w", err)
+		}
+		return nil
+	})
+
+	// Increment follower count (for the user being followed)
+	g.Go(func() error {
+		if err := c.userRepo.IncrementFollowerCount(ctx, event.FollowingId); err != nil {
+			return fmt.Errorf("failed to increment follower count: %w", err)
+		}
+		return nil
+	})
+
+	// Wait for both goroutines
+	if err := g.Wait(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&userv1.IncrementFollowingAndFollowerCountResponse{
+		Incremented: true,
+	}), nil
+
+}
+func (c *UserController) DecrementFollowingAndFollowerCount(ctx context.Context,
+	req *connect.Request[userv1.DecrementFollowingAndFollowerCountRequest],
+) (*connect.Response[userv1.DecrementFollowingAndFollowerCountResponse], error) {
+	event := req.Msg.GetUnfollowedEvent()
+
+	if event == nil || event.UnfollowedAt == nil || event.UserId == 0 || event.FollowingId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("unfollowed event is missing or invalid"))
+	}
+	g, ctx := errgroup.WithContext(ctx)
+
+	// Decrement following count (for the user performing the unfollow)
+	g.Go(func() error {
+		if err := c.userRepo.DecrementFollowingCount(ctx, event.UserId); err != nil {
+			return fmt.Errorf("failed to decrement following count: %w", err)
+		}
+		return nil
+	})
+
+	// Decrement follower count (for the user being unfollowed)
+	g.Go(func() error {
+		if err := c.userRepo.DecrementFollowerCount(ctx, event.FollowingId); err != nil {
+			return fmt.Errorf("failed to decrement follower count: %w", err)
+		}
+		return nil
+	})
+
+	// Wait for both goroutines
+	if err := g.Wait(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	return connect.NewResponse(&userv1.DecrementFollowingAndFollowerCountResponse{
+		Decremented: true,
+	}), nil
+
 }

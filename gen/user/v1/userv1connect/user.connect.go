@@ -41,6 +41,25 @@ const (
 	// UserServiceRefreshTokenProcedure is the fully-qualified name of the UserService's RefreshToken
 	// RPC.
 	UserServiceRefreshTokenProcedure = "/user.v1.UserService/RefreshToken"
+	// UserServiceUpdateUserProcedure is the fully-qualified name of the UserService's UpdateUser RPC.
+	UserServiceUpdateUserProcedure = "/user.v1.UserService/UpdateUser"
+	// UserServiceDeleteUserProcedure is the fully-qualified name of the UserService's DeleteUser RPC.
+	UserServiceDeleteUserProcedure = "/user.v1.UserService/DeleteUser"
+	// UserServiceGetUserByIDProcedure is the fully-qualified name of the UserService's GetUserByID RPC.
+	UserServiceGetUserByIDProcedure = "/user.v1.UserService/GetUserByID"
+	// UserServiceListUsersProcedure is the fully-qualified name of the UserService's ListUsers RPC.
+	UserServiceListUsersProcedure = "/user.v1.UserService/ListUsers"
+	// UserServiceFollowUserProcedure is the fully-qualified name of the UserService's FollowUser RPC.
+	UserServiceFollowUserProcedure = "/user.v1.UserService/FollowUser"
+	// UserServiceUnfollowUserProcedure is the fully-qualified name of the UserService's UnfollowUser
+	// RPC.
+	UserServiceUnfollowUserProcedure = "/user.v1.UserService/UnfollowUser"
+	// UserServiceIncrementFollowingAndFollowerCountProcedure is the fully-qualified name of the
+	// UserService's IncrementFollowingAndFollowerCount RPC.
+	UserServiceIncrementFollowingAndFollowerCountProcedure = "/user.v1.UserService/IncrementFollowingAndFollowerCount"
+	// UserServiceDecrementFollowingAndFollowerCountProcedure is the fully-qualified name of the
+	// UserService's DecrementFollowingAndFollowerCount RPC.
+	UserServiceDecrementFollowingAndFollowerCountProcedure = "/user.v1.UserService/DecrementFollowingAndFollowerCount"
 )
 
 // UserServiceClient is a client for the user.v1.UserService service.
@@ -48,6 +67,14 @@ type UserServiceClient interface {
 	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error)
+	GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error)
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
+	FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error)
+	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
+	IncrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error)
+	DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the user.v1.UserService service. By default, it uses
@@ -79,14 +106,70 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("RefreshToken")),
 			connect.WithClientOptions(opts...),
 		),
+		updateUser: connect.NewClient[v1.UpdateUserRequest, v1.UpdateUserResponse](
+			httpClient,
+			baseURL+UserServiceUpdateUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("UpdateUser")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteUser: connect.NewClient[v1.DeleteUserRequest, v1.DeleteUserResponse](
+			httpClient,
+			baseURL+UserServiceDeleteUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("DeleteUser")),
+			connect.WithClientOptions(opts...),
+		),
+		getUserByID: connect.NewClient[v1.GetUserByIDRequest, v1.GetUserByIDResponse](
+			httpClient,
+			baseURL+UserServiceGetUserByIDProcedure,
+			connect.WithSchema(userServiceMethods.ByName("GetUserByID")),
+			connect.WithClientOptions(opts...),
+		),
+		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
+			httpClient,
+			baseURL+UserServiceListUsersProcedure,
+			connect.WithSchema(userServiceMethods.ByName("ListUsers")),
+			connect.WithClientOptions(opts...),
+		),
+		followUser: connect.NewClient[v1.FollowUserRequest, v1.FollowUserResponse](
+			httpClient,
+			baseURL+UserServiceFollowUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("FollowUser")),
+			connect.WithClientOptions(opts...),
+		),
+		unfollowUser: connect.NewClient[v1.UnfollowUserRequest, v1.UnfollowUserResponse](
+			httpClient,
+			baseURL+UserServiceUnfollowUserProcedure,
+			connect.WithSchema(userServiceMethods.ByName("UnfollowUser")),
+			connect.WithClientOptions(opts...),
+		),
+		incrementFollowingAndFollowerCount: connect.NewClient[v1.IncrementFollowingAndFollowerCountRequest, v1.IncrementFollowingAndFollowerCountResponse](
+			httpClient,
+			baseURL+UserServiceIncrementFollowingAndFollowerCountProcedure,
+			connect.WithSchema(userServiceMethods.ByName("IncrementFollowingAndFollowerCount")),
+			connect.WithClientOptions(opts...),
+		),
+		decrementFollowingAndFollowerCount: connect.NewClient[v1.DecrementFollowingAndFollowerCountRequest, v1.DecrementFollowingAndFollowerCountResponse](
+			httpClient,
+			baseURL+UserServiceDecrementFollowingAndFollowerCountProcedure,
+			connect.WithSchema(userServiceMethods.ByName("DecrementFollowingAndFollowerCount")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
-	loginUser    *connect.Client[v1.LoginUserRequest, v1.LoginUserResponse]
-	createUser   *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
-	refreshToken *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+	loginUser                          *connect.Client[v1.LoginUserRequest, v1.LoginUserResponse]
+	createUser                         *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
+	refreshToken                       *connect.Client[v1.RefreshTokenRequest, v1.RefreshTokenResponse]
+	updateUser                         *connect.Client[v1.UpdateUserRequest, v1.UpdateUserResponse]
+	deleteUser                         *connect.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
+	getUserByID                        *connect.Client[v1.GetUserByIDRequest, v1.GetUserByIDResponse]
+	listUsers                          *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	followUser                         *connect.Client[v1.FollowUserRequest, v1.FollowUserResponse]
+	unfollowUser                       *connect.Client[v1.UnfollowUserRequest, v1.UnfollowUserResponse]
+	incrementFollowingAndFollowerCount *connect.Client[v1.IncrementFollowingAndFollowerCountRequest, v1.IncrementFollowingAndFollowerCountResponse]
+	decrementFollowingAndFollowerCount *connect.Client[v1.DecrementFollowingAndFollowerCountRequest, v1.DecrementFollowingAndFollowerCountResponse]
 }
 
 // LoginUser calls user.v1.UserService.LoginUser.
@@ -104,11 +187,59 @@ func (c *userServiceClient) RefreshToken(ctx context.Context, req *connect.Reque
 	return c.refreshToken.CallUnary(ctx, req)
 }
 
+// UpdateUser calls user.v1.UserService.UpdateUser.
+func (c *userServiceClient) UpdateUser(ctx context.Context, req *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return c.updateUser.CallUnary(ctx, req)
+}
+
+// DeleteUser calls user.v1.UserService.DeleteUser.
+func (c *userServiceClient) DeleteUser(ctx context.Context, req *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error) {
+	return c.deleteUser.CallUnary(ctx, req)
+}
+
+// GetUserByID calls user.v1.UserService.GetUserByID.
+func (c *userServiceClient) GetUserByID(ctx context.Context, req *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error) {
+	return c.getUserByID.CallUnary(ctx, req)
+}
+
+// ListUsers calls user.v1.UserService.ListUsers.
+func (c *userServiceClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return c.listUsers.CallUnary(ctx, req)
+}
+
+// FollowUser calls user.v1.UserService.FollowUser.
+func (c *userServiceClient) FollowUser(ctx context.Context, req *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error) {
+	return c.followUser.CallUnary(ctx, req)
+}
+
+// UnfollowUser calls user.v1.UserService.UnfollowUser.
+func (c *userServiceClient) UnfollowUser(ctx context.Context, req *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error) {
+	return c.unfollowUser.CallUnary(ctx, req)
+}
+
+// IncrementFollowingAndFollowerCount calls user.v1.UserService.IncrementFollowingAndFollowerCount.
+func (c *userServiceClient) IncrementFollowingAndFollowerCount(ctx context.Context, req *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error) {
+	return c.incrementFollowingAndFollowerCount.CallUnary(ctx, req)
+}
+
+// DecrementFollowingAndFollowerCount calls user.v1.UserService.DecrementFollowingAndFollowerCount.
+func (c *userServiceClient) DecrementFollowingAndFollowerCount(ctx context.Context, req *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error) {
+	return c.decrementFollowingAndFollowerCount.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the user.v1.UserService service.
 type UserServiceHandler interface {
 	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
 	RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error)
+	GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error)
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
+	FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error)
+	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
+	IncrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error)
+	DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -136,6 +267,54 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("RefreshToken")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceUpdateUserHandler := connect.NewUnaryHandler(
+		UserServiceUpdateUserProcedure,
+		svc.UpdateUser,
+		connect.WithSchema(userServiceMethods.ByName("UpdateUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceDeleteUserHandler := connect.NewUnaryHandler(
+		UserServiceDeleteUserProcedure,
+		svc.DeleteUser,
+		connect.WithSchema(userServiceMethods.ByName("DeleteUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceGetUserByIDHandler := connect.NewUnaryHandler(
+		UserServiceGetUserByIDProcedure,
+		svc.GetUserByID,
+		connect.WithSchema(userServiceMethods.ByName("GetUserByID")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceListUsersHandler := connect.NewUnaryHandler(
+		UserServiceListUsersProcedure,
+		svc.ListUsers,
+		connect.WithSchema(userServiceMethods.ByName("ListUsers")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceFollowUserHandler := connect.NewUnaryHandler(
+		UserServiceFollowUserProcedure,
+		svc.FollowUser,
+		connect.WithSchema(userServiceMethods.ByName("FollowUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceUnfollowUserHandler := connect.NewUnaryHandler(
+		UserServiceUnfollowUserProcedure,
+		svc.UnfollowUser,
+		connect.WithSchema(userServiceMethods.ByName("UnfollowUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceIncrementFollowingAndFollowerCountHandler := connect.NewUnaryHandler(
+		UserServiceIncrementFollowingAndFollowerCountProcedure,
+		svc.IncrementFollowingAndFollowerCount,
+		connect.WithSchema(userServiceMethods.ByName("IncrementFollowingAndFollowerCount")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceDecrementFollowingAndFollowerCountHandler := connect.NewUnaryHandler(
+		UserServiceDecrementFollowingAndFollowerCountProcedure,
+		svc.DecrementFollowingAndFollowerCount,
+		connect.WithSchema(userServiceMethods.ByName("DecrementFollowingAndFollowerCount")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/user.v1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceLoginUserProcedure:
@@ -144,6 +323,22 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 			userServiceCreateUserHandler.ServeHTTP(w, r)
 		case UserServiceRefreshTokenProcedure:
 			userServiceRefreshTokenHandler.ServeHTTP(w, r)
+		case UserServiceUpdateUserProcedure:
+			userServiceUpdateUserHandler.ServeHTTP(w, r)
+		case UserServiceDeleteUserProcedure:
+			userServiceDeleteUserHandler.ServeHTTP(w, r)
+		case UserServiceGetUserByIDProcedure:
+			userServiceGetUserByIDHandler.ServeHTTP(w, r)
+		case UserServiceListUsersProcedure:
+			userServiceListUsersHandler.ServeHTTP(w, r)
+		case UserServiceFollowUserProcedure:
+			userServiceFollowUserHandler.ServeHTTP(w, r)
+		case UserServiceUnfollowUserProcedure:
+			userServiceUnfollowUserHandler.ServeHTTP(w, r)
+		case UserServiceIncrementFollowingAndFollowerCountProcedure:
+			userServiceIncrementFollowingAndFollowerCountHandler.ServeHTTP(w, r)
+		case UserServiceDecrementFollowingAndFollowerCountProcedure:
+			userServiceDecrementFollowingAndFollowerCountHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -163,4 +358,36 @@ func (UnimplementedUserServiceHandler) CreateUser(context.Context, *connect.Requ
 
 func (UnimplementedUserServiceHandler) RefreshToken(context.Context, *connect.Request[v1.RefreshTokenRequest]) (*connect.Response[v1.RefreshTokenResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.RefreshToken is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.UpdateUser is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) DeleteUser(context.Context, *connect.Request[v1.DeleteUserRequest]) (*connect.Response[v1.DeleteUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.DeleteUser is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) GetUserByID(context.Context, *connect.Request[v1.GetUserByIDRequest]) (*connect.Response[v1.GetUserByIDResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.GetUserByID is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.ListUsers is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) FollowUser(context.Context, *connect.Request[v1.FollowUserRequest]) (*connect.Response[v1.FollowUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.FollowUser is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.UnfollowUser is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) IncrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.IncrementFollowingAndFollowerCount is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.DecrementFollowingAndFollowerCount is not implemented"))
 }

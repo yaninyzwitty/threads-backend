@@ -25,7 +25,8 @@ type Claims struct {
 // GenerateJWT_Token creates and signs a new JWT token containing user-specific claims.
 // The token includes the user's ID, email, username, and full name, and is valid for 15 minutes.
 // Returns the signed JWT token string or an error if token generation fails.
-func GenerateJWT_Token(userID int64, email string, username string, fullName string) (string, error) {
+func GenerateJWTToken(userID int64, email string, username string, fullName string) (string, error) {
+
 	claims := &Claims{
 		UserID:   userID,
 		Email:    email,
@@ -47,7 +48,7 @@ func GenerateJWT_Token(userID int64, email string, username string, fullName str
 }
 
 // ValidateJWT_Token parses and verifies a JWT token string, returning the associated claims if the token is valid.
-func ValidateJWT_Token(tokenString string) (*Claims, error) {
+func ValidateJWTToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
