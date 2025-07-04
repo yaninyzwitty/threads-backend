@@ -117,6 +117,7 @@ func main() {
 	go func() {
 		eventHandler := map[string]func([]byte) error{
 			"user.followed": func(b []byte) error {
+				// TODO - use outbox event
 				var event userv1.FollowedEvent
 				if err := protojson.Unmarshal(b, &event); err != nil {
 					return fmt.Errorf("unmarshal error: %w", err)
