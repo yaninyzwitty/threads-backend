@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package user.v1;
+import "processor/v1/processor.proto";
 
 
 import "google/protobuf/timestamp.proto";
@@ -17,6 +18,10 @@ message User {
   google.protobuf.Timestamp updated_at = 8;
   string password = 9;
   
+}
+
+message OutboxEvent {
+  processor.v1.OutboxMessage outbox_message = 1;
 }
 
 message FollowedEvent {
