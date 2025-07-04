@@ -13,7 +13,9 @@ type contextKey string
 
 const UserContextKey contextKey = "user"
 
-// AuthInterceptor parses JWT and adds user to context
+// AuthInterceptor returns a Connect interceptor that enforces JWT authentication for protected routes.
+// It parses the "Authorization" header, validates the JWT, and attaches the authenticated user to the request context.
+// Unauthenticated access is allowed for the "CreateUser" and "RefreshToken" procedures.
 
 func AuthInterceptor() connect.Interceptor {
 	return connect.UnaryInterceptorFunc(func(uf connect.UnaryFunc) connect.UnaryFunc {
@@ -75,7 +77,8 @@ func AuthInterceptor() connect.Interceptor {
 
 }
 
-// Helper function to get user from context
+// GetUserFromContext retrieves the user information stored in the context.
+// Returns an error if no user is found in the context.
 func GetUserFromContext(ctx context.Context) (*userv1.User, error) {
 	user, ok := ctx.Value(UserContextKey).(*userv1.User)
 	if !ok {

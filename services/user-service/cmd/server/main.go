@@ -29,6 +29,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// main initializes and runs the user service server, setting up configuration, logging, database and Redis connections, and handling graceful shutdown.
 func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found")

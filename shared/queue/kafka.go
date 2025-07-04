@@ -16,7 +16,7 @@ type Config struct {
 	Password string
 }
 
-// Create SASL Dialer with TLS - compatible with astra-streaming
+// newDialer returns a Kafka dialer configured with SASL/PLAIN authentication and TLS using the provided configuration.
 func newDialer(cfg Config) *kafka.Dialer {
 	mechanism := plain.Mechanism{
 		Username: cfg.Username,
@@ -31,7 +31,8 @@ func newDialer(cfg Config) *kafka.Dialer {
 	}
 }
 
-// KafkaWriter initializes a Kafka writer (producer)
+// NewKafkaConfig returns a Kafka writer configured for SASL/PLAIN authentication over TLS using the provided configuration.
+// The writer uses least-bytes balancing, requires all acknowledgments, operates asynchronously, and batches messages with a 10-second timeout.
 
 func NewKafkaConfig(cfg Config) *kafka.Writer {
 	return kafka.NewWriter(kafka.WriterConfig{
@@ -45,7 +46,7 @@ func NewKafkaConfig(cfg Config) *kafka.Writer {
 	})
 }
 
-// KafkaReader initializes a Kafka reader (consumer)
+// NewKafkaReader creates and returns a Kafka consumer configured with SASL/PLAIN authentication over TLS, using the provided connection settings. The reader is set up for group consumption with specified fetch sizes, offset behavior, and session timeouts.
 
 func NewKafkaReader(cfg Config) *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{

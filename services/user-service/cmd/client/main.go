@@ -14,7 +14,8 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/pkg"
 )
 
-// initialize client here
+// main initializes configuration, sets up a user service client, and creates a test user via RPC.
+// The function loads environment variables and configuration, constructs the user service client, and sends a create user request. On failure, it logs the error and exits; on success, it logs the created user information.
 
 func main() {
 

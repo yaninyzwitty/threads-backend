@@ -21,6 +21,7 @@ type UserController struct {
 	store    auth.RefreshTokenStore
 }
 
+// NewUserController creates a new UserController with the provided user repository and refresh token store.
 func NewUserController(userRepo *repository.UserRepository, store auth.RefreshTokenStore) *UserController {
 	return &UserController{
 		userRepo: userRepo,

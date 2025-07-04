@@ -14,11 +14,13 @@ type RefreshTokenStore struct {
 	Redis *redis.Client
 }
 
+// NewRefreshTokenStore creates a new RefreshTokenStore using the provided Redis client.
 func NewRefreshTokenStore(redis *redis.Client) *RefreshTokenStore {
 	return &RefreshTokenStore{Redis: redis}
 }
 
-// Generate random refresh token string
+// generateRefreshToken generates a secure random 32-byte refresh token encoded as a hexadecimal string.
+// Returns the token string or an error if random byte generation fails.
 
 func generateRefreshToken() (string, error) {
 	bytes := make([]byte, 32)
