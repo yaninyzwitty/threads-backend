@@ -42,7 +42,7 @@ func main() {
 		userServiceUrl,
 	)
 	req := connect.NewRequest(&userv1.FollowUserRequest{
-		FollowingId: 144603701179338358,
+		FollowingId: 144603817143455350,
 	})
 
 	req.Header().Set("Authorization", "Bearer "+os.Getenv("ACCESS_TOKEN"))

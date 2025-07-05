@@ -7,14 +7,12 @@
 package userv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
-	v1 "github.com/yaninyzwitty/threads-go-backend/gen/processor/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -134,7 +132,10 @@ func (x *User) GetPassword() string {
 
 type OutboxEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OutboxMessage *v1.OutboxMessage      `protobuf:"bytes,1,opt,name=outbox_message,json=outboxMessage,proto3" json:"outbox_message,omitempty"`
+	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	EventType     string                 `protobuf:"bytes,2,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
+	Payload       string                 `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
+	Published     bool                   `protobuf:"varint,4,opt,name=published,proto3" json:"published,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -169,11 +170,32 @@ func (*OutboxEvent) Descriptor() ([]byte, []int) {
 	return file_user_v1_user_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *OutboxEvent) GetOutboxMessage() *v1.OutboxMessage {
+func (x *OutboxEvent) GetEventId() string {
 	if x != nil {
-		return x.OutboxMessage
+		return x.EventId
 	}
-	return nil
+	return ""
+}
+
+func (x *OutboxEvent) GetEventType() string {
+	if x != nil {
+		return x.EventType
+	}
+	return ""
+}
+
+func (x *OutboxEvent) GetPayload() string {
+	if x != nil {
+		return x.Payload
+	}
+	return ""
+}
+
+func (x *OutboxEvent) GetPublished() bool {
+	if x != nil {
+		return x.Published
+	}
+	return false
 }
 
 type FollowedEvent struct {
@@ -1403,11 +1425,203 @@ func (x *DecrementFollowingAndFollowerCountResponse) GetDecremented() bool {
 	return false
 }
 
+type FollowUserCachedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FollowingId   int64                  `protobuf:"varint,2,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FollowUserCachedRequest) Reset() {
+	*x = FollowUserCachedRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FollowUserCachedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FollowUserCachedRequest) ProtoMessage() {}
+
+func (x *FollowUserCachedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FollowUserCachedRequest.ProtoReflect.Descriptor instead.
+func (*FollowUserCachedRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *FollowUserCachedRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *FollowUserCachedRequest) GetFollowingId() int64 {
+	if x != nil {
+		return x.FollowingId
+	}
+	return 0
+}
+
+type FollowUserCachedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FollowUserCachedResponse) Reset() {
+	*x = FollowUserCachedResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FollowUserCachedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FollowUserCachedResponse) ProtoMessage() {}
+
+func (x *FollowUserCachedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FollowUserCachedResponse.ProtoReflect.Descriptor instead.
+func (*FollowUserCachedResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *FollowUserCachedResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type UnfollowUserCachedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FollowingId   int64                  `protobuf:"varint,2,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnfollowUserCachedRequest) Reset() {
+	*x = UnfollowUserCachedRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnfollowUserCachedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnfollowUserCachedRequest) ProtoMessage() {}
+
+func (x *UnfollowUserCachedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnfollowUserCachedRequest.ProtoReflect.Descriptor instead.
+func (*UnfollowUserCachedRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *UnfollowUserCachedRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *UnfollowUserCachedRequest) GetFollowingId() int64 {
+	if x != nil {
+		return x.FollowingId
+	}
+	return 0
+}
+
+type UnfollowUserCachedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnfollowUserCachedResponse) Reset() {
+	*x = UnfollowUserCachedResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnfollowUserCachedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnfollowUserCachedResponse) ProtoMessage() {}
+
+func (x *UnfollowUserCachedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnfollowUserCachedResponse.ProtoReflect.Descriptor instead.
+func (*UnfollowUserCachedResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *UnfollowUserCachedResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x12user/v1/user.proto\x12\auser.v1\x1a\x1cprocessor/v1/processor.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc0\x02\n" +
+	"\x12user/v1/user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc0\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
@@ -1420,9 +1634,13 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x1a\n" +
-	"\bpassword\x18\t \x01(\tR\bpassword\"Q\n" +
-	"\vOutboxEvent\x12B\n" +
-	"\x0eoutbox_message\x18\x01 \x01(\v2\x1b.processor.v1.OutboxMessageR\routboxMessage\"\xa3\x01\n" +
+	"\bpassword\x18\t \x01(\tR\bpassword\"\x7f\n" +
+	"\vOutboxEvent\x12\x19\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1d\n" +
+	"\n" +
+	"event_type\x18\x02 \x01(\tR\teventType\x12\x18\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload\x12\x1c\n" +
+	"\tpublished\x18\x04 \x01(\bR\tpublished\"\xa3\x01\n" +
 	"\rFollowedEvent\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12!\n" +
@@ -1494,7 +1712,17 @@ const file_user_v1_user_proto_rawDesc = "" +
 	")DecrementFollowingAndFollowerCountRequest\x12C\n" +
 	"\x10unfollowed_event\x18\x01 \x01(\v2\x18.user.v1.UnfollowedEventR\x0funfollowedEvent\"N\n" +
 	"*DecrementFollowingAndFollowerCountResponse\x12 \n" +
-	"\vdecremented\x18\x01 \x01(\bR\vdecremented2\xb5\a\n" +
+	"\vdecremented\x18\x01 \x01(\bR\vdecremented\"U\n" +
+	"\x17FollowUserCachedRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
+	"\ffollowing_id\x18\x02 \x01(\x03R\vfollowingId\"4\n" +
+	"\x18FollowUserCachedResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"W\n" +
+	"\x19UnfollowUserCachedRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
+	"\ffollowing_id\x18\x02 \x01(\x03R\vfollowingId\"6\n" +
+	"\x1aUnfollowUserCachedResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xed\b\n" +
 	"\vUserService\x12B\n" +
 	"\tLoginUser\x12\x19.user.v1.LoginUserRequest\x1a\x1a.user.v1.LoginUserResponse\x12E\n" +
 	"\n" +
@@ -1510,7 +1738,9 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"FollowUser\x12\x1a.user.v1.FollowUserRequest\x1a\x1b.user.v1.FollowUserResponse\x12K\n" +
 	"\fUnfollowUser\x12\x1c.user.v1.UnfollowUserRequest\x1a\x1d.user.v1.UnfollowUserResponse\x12\x8d\x01\n" +
 	"\"IncrementFollowingAndFollowerCount\x122.user.v1.IncrementFollowingAndFollowerCountRequest\x1a3.user.v1.IncrementFollowingAndFollowerCountResponse\x12\x8d\x01\n" +
-	"\"DecrementFollowingAndFollowerCount\x122.user.v1.DecrementFollowingAndFollowerCountRequest\x1a3.user.v1.DecrementFollowingAndFollowerCountResponseB\x8a\x01\n" +
+	"\"DecrementFollowingAndFollowerCount\x122.user.v1.DecrementFollowingAndFollowerCountRequest\x1a3.user.v1.DecrementFollowingAndFollowerCountResponse\x12W\n" +
+	"\x10FollowUserCached\x12 .user.v1.FollowUserCachedRequest\x1a!.user.v1.FollowUserCachedResponse\x12]\n" +
+	"\x12UnfollowUserCached\x12\".user.v1.UnfollowUserCachedRequest\x1a#.user.v1.UnfollowUserCachedResponseB\x8a\x01\n" +
 	"\vcom.user.v1B\tUserProtoP\x01Z3github.com/bufbuild/buf-examples/gen/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
@@ -1525,7 +1755,7 @@ func file_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_user_v1_user_proto_rawDescData
 }
 
-var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_user_v1_user_proto_goTypes = []any{
 	(*User)(nil),                                       // 0: user.v1.User
 	(*OutboxEvent)(nil),                                // 1: user.v1.OutboxEvent
@@ -1553,48 +1783,54 @@ var file_user_v1_user_proto_goTypes = []any{
 	(*IncrementFollowingAndFollowerCountResponse)(nil), // 23: user.v1.IncrementFollowingAndFollowerCountResponse
 	(*DecrementFollowingAndFollowerCountRequest)(nil),  // 24: user.v1.DecrementFollowingAndFollowerCountRequest
 	(*DecrementFollowingAndFollowerCountResponse)(nil), // 25: user.v1.DecrementFollowingAndFollowerCountResponse
-	(*timestamppb.Timestamp)(nil),                      // 26: google.protobuf.Timestamp
-	(*v1.OutboxMessage)(nil),                           // 27: processor.v1.OutboxMessage
+	(*FollowUserCachedRequest)(nil),                    // 26: user.v1.FollowUserCachedRequest
+	(*FollowUserCachedResponse)(nil),                   // 27: user.v1.FollowUserCachedResponse
+	(*UnfollowUserCachedRequest)(nil),                  // 28: user.v1.UnfollowUserCachedRequest
+	(*UnfollowUserCachedResponse)(nil),                 // 29: user.v1.UnfollowUserCachedResponse
+	(*timestamppb.Timestamp)(nil),                      // 30: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
-	26, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	26, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	27, // 2: user.v1.OutboxEvent.outbox_message:type_name -> processor.v1.OutboxMessage
-	26, // 3: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
-	26, // 4: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
-	0,  // 5: user.v1.CreateUserResponse.user:type_name -> user.v1.User
-	0,  // 6: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
-	0,  // 7: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
-	0,  // 8: user.v1.ListUsersResponse.users:type_name -> user.v1.User
-	2,  // 9: user.v1.IncrementFollowingAndFollowerCountRequest.followed_event:type_name -> user.v1.FollowedEvent
-	3,  // 10: user.v1.DecrementFollowingAndFollowerCountRequest.unfollowed_event:type_name -> user.v1.UnfollowedEvent
-	4,  // 11: user.v1.UserService.LoginUser:input_type -> user.v1.LoginUserRequest
-	6,  // 12: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
-	8,  // 13: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
-	10, // 14: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
-	20, // 15: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
-	12, // 16: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
-	14, // 17: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
-	16, // 18: user.v1.UserService.FollowUser:input_type -> user.v1.FollowUserRequest
-	18, // 19: user.v1.UserService.UnfollowUser:input_type -> user.v1.UnfollowUserRequest
-	22, // 20: user.v1.UserService.IncrementFollowingAndFollowerCount:input_type -> user.v1.IncrementFollowingAndFollowerCountRequest
-	24, // 21: user.v1.UserService.DecrementFollowingAndFollowerCount:input_type -> user.v1.DecrementFollowingAndFollowerCountRequest
-	5,  // 22: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
-	7,  // 23: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
-	9,  // 24: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
-	11, // 25: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
-	21, // 26: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
-	13, // 27: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	15, // 28: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
-	17, // 29: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
-	19, // 30: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
-	23, // 31: user.v1.UserService.IncrementFollowingAndFollowerCount:output_type -> user.v1.IncrementFollowingAndFollowerCountResponse
-	25, // 32: user.v1.UserService.DecrementFollowingAndFollowerCount:output_type -> user.v1.DecrementFollowingAndFollowerCountResponse
-	22, // [22:33] is the sub-list for method output_type
-	11, // [11:22] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	30, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	30, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	30, // 2: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
+	30, // 3: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: user.v1.CreateUserResponse.user:type_name -> user.v1.User
+	0,  // 5: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
+	0,  // 6: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
+	0,  // 7: user.v1.ListUsersResponse.users:type_name -> user.v1.User
+	2,  // 8: user.v1.IncrementFollowingAndFollowerCountRequest.followed_event:type_name -> user.v1.FollowedEvent
+	3,  // 9: user.v1.DecrementFollowingAndFollowerCountRequest.unfollowed_event:type_name -> user.v1.UnfollowedEvent
+	4,  // 10: user.v1.UserService.LoginUser:input_type -> user.v1.LoginUserRequest
+	6,  // 11: user.v1.UserService.CreateUser:input_type -> user.v1.CreateUserRequest
+	8,  // 12: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
+	10, // 13: user.v1.UserService.UpdateUser:input_type -> user.v1.UpdateUserRequest
+	20, // 14: user.v1.UserService.DeleteUser:input_type -> user.v1.DeleteUserRequest
+	12, // 15: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
+	14, // 16: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
+	16, // 17: user.v1.UserService.FollowUser:input_type -> user.v1.FollowUserRequest
+	18, // 18: user.v1.UserService.UnfollowUser:input_type -> user.v1.UnfollowUserRequest
+	22, // 19: user.v1.UserService.IncrementFollowingAndFollowerCount:input_type -> user.v1.IncrementFollowingAndFollowerCountRequest
+	24, // 20: user.v1.UserService.DecrementFollowingAndFollowerCount:input_type -> user.v1.DecrementFollowingAndFollowerCountRequest
+	26, // 21: user.v1.UserService.FollowUserCached:input_type -> user.v1.FollowUserCachedRequest
+	28, // 22: user.v1.UserService.UnfollowUserCached:input_type -> user.v1.UnfollowUserCachedRequest
+	5,  // 23: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
+	7,  // 24: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
+	9,  // 25: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
+	11, // 26: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
+	21, // 27: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
+	13, // 28: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	15, // 29: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
+	17, // 30: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
+	19, // 31: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
+	23, // 32: user.v1.UserService.IncrementFollowingAndFollowerCount:output_type -> user.v1.IncrementFollowingAndFollowerCountResponse
+	25, // 33: user.v1.UserService.DecrementFollowingAndFollowerCount:output_type -> user.v1.DecrementFollowingAndFollowerCountResponse
+	27, // 34: user.v1.UserService.FollowUserCached:output_type -> user.v1.FollowUserCachedResponse
+	29, // 35: user.v1.UserService.UnfollowUserCached:output_type -> user.v1.UnfollowUserCachedResponse
+	23, // [23:36] is the sub-list for method output_type
+	10, // [10:23] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_user_v1_user_proto_init() }
@@ -1608,7 +1844,7 @@ func file_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_v1_user_proto_rawDesc), len(file_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -26,11 +26,10 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
-// main initializes and runs the user service server, setting up configuration, logging, database and Redis connections, and handling graceful shutdown.
 func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found")
@@ -44,6 +43,8 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	defer slog.Info("service shutdown complete")
 
 	if err := snowflake.InitSonyFlake(); err != nil {
 		slog.Error("failed to initialize snowflake", "error", err)
@@ -82,7 +83,7 @@ func main() {
 	})
 	defer kafkaReader.Close()
 
-	userRepo := repository.NewUserRepository(dbSession)
+	userRepo := repository.NewUserRepository(dbSession, rdb)
 	userController := controller.NewUserController(userRepo, refreshTokenStore)
 
 	userPath, userHandler := userv1connect.NewUserServiceHandler(
@@ -101,7 +102,6 @@ func main() {
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
 	go func() {
 		sig := <-quit
 		slog.Info("received shutdown signal", "signal", sig)
@@ -117,68 +117,77 @@ func main() {
 
 	// Kafka event handler
 	go func() {
-		eventHandler := map[string]func([]byte) error{
+		eventHandlers := map[string]func([]byte) error{
 			"user.followed": func(b []byte) error {
-				// Step 1: Decode JSON into OutboxEvent
 				var event userv1.OutboxEvent
 				if err := protojson.Unmarshal(b, &event); err != nil {
 					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
 				}
 
-				// Step 2: Extract and validate OutboxMessage
-				outboxMessage := event.GetOutboxMessage()
-				if outboxMessage == nil {
-					return fmt.Errorf("missing outbox_message in OutboxEvent")
-				}
-
-				// Step 3: Decode the binary payload into FollowedEvent
 				var followedEvent userv1.FollowedEvent
-				if err := proto.Unmarshal(outboxMessage.GetPayload(), &followedEvent); err != nil {
+				if err := protojson.Unmarshal([]byte(event.Payload), &followedEvent); err != nil {
 					return fmt.Errorf("failed to unmarshal FollowedEvent payload: %w", err)
 				}
 
-				// Step 4: Call the domain logic (controller)
-				_, err := userController.IncrementFollowingAndFollowerCount(ctx,
-					connect.NewRequest(&userv1.IncrementFollowingAndFollowerCountRequest{
-						FollowedEvent: &followedEvent,
-					}))
-				if err != nil {
-					return fmt.Errorf("failed to increment following/follower count: %w", err)
-				}
+				eg, egCtx := errgroup.WithContext(ctx)
 
+				eg.Go(func() error {
+					_, err := userController.IncrementFollowingAndFollowerCount(egCtx,
+						connect.NewRequest(&userv1.IncrementFollowingAndFollowerCountRequest{
+							FollowedEvent: &followedEvent,
+						}))
+					return err
+				})
+
+				eg.Go(func() error {
+					_, err := userController.FollowUserCached(egCtx,
+						connect.NewRequest(&userv1.FollowUserCachedRequest{
+							UserId:      followedEvent.UserId,
+							FollowingId: followedEvent.FollowingId,
+						}))
+					return err
+				})
+
+				if err := eg.Wait(); err != nil {
+					slog.Error("follow event handling failed", "err", err)
+					return err
+				}
 				return nil
 			},
 
 			"user.unfollowed": func(b []byte) error {
-				// Step 1: Decode JSON into OutboxEvent
 				var event userv1.OutboxEvent
 				if err := protojson.Unmarshal(b, &event); err != nil {
 					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
 				}
 
-				// Step 2: Extract and validate OutboxMessage
-				outboxMessage := event.GetOutboxMessage()
-				if outboxMessage == nil {
-					return fmt.Errorf("missing outbox_message in OutboxEvent")
-				}
-
-				// Step 3: Decode the binary payload into UnFollowedEvent
 				var unfollowedEvent userv1.UnfollowedEvent
-				if err := proto.Unmarshal(outboxMessage.GetPayload(), &unfollowedEvent); err != nil {
+				if err := protojson.Unmarshal([]byte(event.Payload), &unfollowedEvent); err != nil {
 					return fmt.Errorf("failed to unmarshal UnfollowedEvent payload: %w", err)
 				}
 
-				// Step 4: Call the domain logic (controller)
+				eg, egCtx := errgroup.WithContext(ctx)
+				eg.Go(func() error {
+					_, err := userController.DecrementFollowingAndFollowerCount(egCtx,
+						connect.NewRequest(&userv1.DecrementFollowingAndFollowerCountRequest{
+							UnfollowedEvent: &unfollowedEvent,
+						}))
+					return err
+				})
 
-				_, err := userController.DecrementFollowingAndFollowerCount(ctx,
-					connect.NewRequest(&userv1.DecrementFollowingAndFollowerCountRequest{
-						UnfollowedEvent: &unfollowedEvent,
-					}))
+				eg.Go(func() error {
+					_, err := userController.UnfollowUserCached(egCtx,
+						connect.NewRequest(&userv1.UnfollowUserCachedRequest{
+							UserId:      unfollowedEvent.UserId,
+							FollowingId: unfollowedEvent.FollowingId,
+						}))
+					return err
+				})
 
-				if err != nil {
-					return fmt.Errorf("failed to decrement following/follower count: %w", err)
+				if err := eg.Wait(); err != nil {
+					slog.Error("unfollow event handling failed", "err", err)
+					return err
 				}
-
 				return nil
 			},
 		}
@@ -186,27 +195,29 @@ func main() {
 		for {
 			msg, err := kafkaReader.ReadMessage(ctx)
 			if ctx.Err() != nil {
-				slog.Info("Receive interrupted due to shutdown, exiting message loop...")
+				slog.Info("Receive interrupted, shutting down message loop...")
 				return
 			}
 			if err != nil {
-				slog.Error("failed to read message", "error", err)
+				slog.Error("failed to read Kafka message", "error", err)
 				continue
 			}
 
 			parts := strings.Split(string(msg.Key), ":")
 			if len(parts) != 2 {
-				slog.Warn("invalid message key", "key", string(msg.Key))
+				slog.Warn("invalid Kafka message key format", "key", string(msg.Key))
 				continue
 			}
 
-			handler, ok := eventHandler[parts[0]]
+			eventKey := parts[0]
+			handler, ok := eventHandlers[eventKey]
 			if !ok {
-				slog.Warn("no handler for message key", "key", parts[0])
+				slog.Warn("no handler found for event key", "key", eventKey)
 				continue
 			}
+
 			if err := handler(msg.Value); err != nil {
-				slog.Error("handler error", "key", parts[0], "err", err)
+				slog.Error("event handler failed", "key", eventKey, "error", err)
 			}
 		}
 	}()
@@ -216,6 +227,4 @@ func main() {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
 	}
-
-	slog.Info("service shutdown complete")
 }

@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package user.v1;
-import "processor/v1/processor.proto";
 
 
 import "google/protobuf/timestamp.proto";
@@ -21,7 +20,10 @@ message User {
 }
 
 message OutboxEvent {
-  processor.v1.OutboxMessage outbox_message = 1;
+    string event_id = 1;
+    string event_type = 2;
+    string payload = 3;
+    bool published = 4;
 }
 
 message FollowedEvent {
@@ -149,6 +151,23 @@ message DecrementFollowingAndFollowerCountResponse {
   bool decremented = 1;
 }
 
+message FollowUserCachedRequest {
+  int64 user_id = 1;
+  int64 following_id = 2;
+}
+
+message FollowUserCachedResponse {
+  bool success = 1;
+}
+
+message UnfollowUserCachedRequest {
+  int64 user_id = 1;
+  int64 following_id = 2;
+}
+
+message UnfollowUserCachedResponse {
+  bool success = 1;
+}
 
 service UserService {
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
@@ -162,6 +181,8 @@ service UserService {
   rpc UnfollowUser(UnfollowUserRequest) returns (UnfollowUserResponse);
   rpc IncrementFollowingAndFollowerCount(IncrementFollowingAndFollowerCountRequest) returns (IncrementFollowingAndFollowerCountResponse);
   rpc DecrementFollowingAndFollowerCount(DecrementFollowingAndFollowerCountRequest) returns (DecrementFollowingAndFollowerCountResponse);
+  rpc FollowUserCached(FollowUserCachedRequest) returns (FollowUserCachedResponse);
+  rpc UnfollowUserCached(UnfollowUserCachedRequest) returns (UnfollowUserCachedResponse);
   
  
 

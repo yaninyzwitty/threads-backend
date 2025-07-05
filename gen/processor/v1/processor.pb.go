@@ -25,7 +25,7 @@ type OutboxMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
 	EventType     string                 `protobuf:"bytes,2,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
-	Payload       []byte                 `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
+	Payload       string                 `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
 	Published     bool                   `protobuf:"varint,4,opt,name=published,proto3" json:"published,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -75,11 +75,11 @@ func (x *OutboxMessage) GetEventType() string {
 	return ""
 }
 
-func (x *OutboxMessage) GetPayload() []byte {
+func (x *OutboxMessage) GetPayload() string {
 	if x != nil {
 		return x.Payload
 	}
-	return nil
+	return ""
 }
 
 func (x *OutboxMessage) GetPublished() bool {
@@ -186,7 +186,7 @@ const file_processor_v1_processor_proto_rawDesc = "" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1d\n" +
 	"\n" +
 	"event_type\x18\x02 \x01(\tR\teventType\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\fR\apayload\x12\x1c\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload\x12\x1c\n" +
 	"\tpublished\x18\x04 \x01(\bR\tpublished\";\n" +
 	"\x1bProcessOutboxMessageRequest\x12\x1c\n" +
 	"\tpublished\x18\x01 \x01(\bR\tpublished\"G\n" +

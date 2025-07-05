@@ -60,6 +60,12 @@ const (
 	// UserServiceDecrementFollowingAndFollowerCountProcedure is the fully-qualified name of the
 	// UserService's DecrementFollowingAndFollowerCount RPC.
 	UserServiceDecrementFollowingAndFollowerCountProcedure = "/user.v1.UserService/DecrementFollowingAndFollowerCount"
+	// UserServiceFollowUserCachedProcedure is the fully-qualified name of the UserService's
+	// FollowUserCached RPC.
+	UserServiceFollowUserCachedProcedure = "/user.v1.UserService/FollowUserCached"
+	// UserServiceUnfollowUserCachedProcedure is the fully-qualified name of the UserService's
+	// UnfollowUserCached RPC.
+	UserServiceUnfollowUserCachedProcedure = "/user.v1.UserService/UnfollowUserCached"
 )
 
 // UserServiceClient is a client for the user.v1.UserService service.
@@ -75,6 +81,8 @@ type UserServiceClient interface {
 	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
 	IncrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error)
 	DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error)
+	FollowUserCached(context.Context, *connect.Request[v1.FollowUserCachedRequest]) (*connect.Response[v1.FollowUserCachedResponse], error)
+	UnfollowUserCached(context.Context, *connect.Request[v1.UnfollowUserCachedRequest]) (*connect.Response[v1.UnfollowUserCachedResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the user.v1.UserService service. By default, it uses
@@ -154,6 +162,18 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceMethods.ByName("DecrementFollowingAndFollowerCount")),
 			connect.WithClientOptions(opts...),
 		),
+		followUserCached: connect.NewClient[v1.FollowUserCachedRequest, v1.FollowUserCachedResponse](
+			httpClient,
+			baseURL+UserServiceFollowUserCachedProcedure,
+			connect.WithSchema(userServiceMethods.ByName("FollowUserCached")),
+			connect.WithClientOptions(opts...),
+		),
+		unfollowUserCached: connect.NewClient[v1.UnfollowUserCachedRequest, v1.UnfollowUserCachedResponse](
+			httpClient,
+			baseURL+UserServiceUnfollowUserCachedProcedure,
+			connect.WithSchema(userServiceMethods.ByName("UnfollowUserCached")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -170,6 +190,8 @@ type userServiceClient struct {
 	unfollowUser                       *connect.Client[v1.UnfollowUserRequest, v1.UnfollowUserResponse]
 	incrementFollowingAndFollowerCount *connect.Client[v1.IncrementFollowingAndFollowerCountRequest, v1.IncrementFollowingAndFollowerCountResponse]
 	decrementFollowingAndFollowerCount *connect.Client[v1.DecrementFollowingAndFollowerCountRequest, v1.DecrementFollowingAndFollowerCountResponse]
+	followUserCached                   *connect.Client[v1.FollowUserCachedRequest, v1.FollowUserCachedResponse]
+	unfollowUserCached                 *connect.Client[v1.UnfollowUserCachedRequest, v1.UnfollowUserCachedResponse]
 }
 
 // LoginUser calls user.v1.UserService.LoginUser.
@@ -227,6 +249,16 @@ func (c *userServiceClient) DecrementFollowingAndFollowerCount(ctx context.Conte
 	return c.decrementFollowingAndFollowerCount.CallUnary(ctx, req)
 }
 
+// FollowUserCached calls user.v1.UserService.FollowUserCached.
+func (c *userServiceClient) FollowUserCached(ctx context.Context, req *connect.Request[v1.FollowUserCachedRequest]) (*connect.Response[v1.FollowUserCachedResponse], error) {
+	return c.followUserCached.CallUnary(ctx, req)
+}
+
+// UnfollowUserCached calls user.v1.UserService.UnfollowUserCached.
+func (c *userServiceClient) UnfollowUserCached(ctx context.Context, req *connect.Request[v1.UnfollowUserCachedRequest]) (*connect.Response[v1.UnfollowUserCachedResponse], error) {
+	return c.unfollowUserCached.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the user.v1.UserService service.
 type UserServiceHandler interface {
 	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
@@ -240,6 +272,8 @@ type UserServiceHandler interface {
 	UnfollowUser(context.Context, *connect.Request[v1.UnfollowUserRequest]) (*connect.Response[v1.UnfollowUserResponse], error)
 	IncrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.IncrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.IncrementFollowingAndFollowerCountResponse], error)
 	DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error)
+	FollowUserCached(context.Context, *connect.Request[v1.FollowUserCachedRequest]) (*connect.Response[v1.FollowUserCachedResponse], error)
+	UnfollowUserCached(context.Context, *connect.Request[v1.UnfollowUserCachedRequest]) (*connect.Response[v1.UnfollowUserCachedResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -315,6 +349,18 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceMethods.ByName("DecrementFollowingAndFollowerCount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceFollowUserCachedHandler := connect.NewUnaryHandler(
+		UserServiceFollowUserCachedProcedure,
+		svc.FollowUserCached,
+		connect.WithSchema(userServiceMethods.ByName("FollowUserCached")),
+		connect.WithHandlerOptions(opts...),
+	)
+	userServiceUnfollowUserCachedHandler := connect.NewUnaryHandler(
+		UserServiceUnfollowUserCachedProcedure,
+		svc.UnfollowUserCached,
+		connect.WithSchema(userServiceMethods.ByName("UnfollowUserCached")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/user.v1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceLoginUserProcedure:
@@ -339,6 +385,10 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 			userServiceIncrementFollowingAndFollowerCountHandler.ServeHTTP(w, r)
 		case UserServiceDecrementFollowingAndFollowerCountProcedure:
 			userServiceDecrementFollowingAndFollowerCountHandler.ServeHTTP(w, r)
+		case UserServiceFollowUserCachedProcedure:
+			userServiceFollowUserCachedHandler.ServeHTTP(w, r)
+		case UserServiceUnfollowUserCachedProcedure:
+			userServiceUnfollowUserCachedHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -390,4 +440,12 @@ func (UnimplementedUserServiceHandler) IncrementFollowingAndFollowerCount(contex
 
 func (UnimplementedUserServiceHandler) DecrementFollowingAndFollowerCount(context.Context, *connect.Request[v1.DecrementFollowingAndFollowerCountRequest]) (*connect.Response[v1.DecrementFollowingAndFollowerCountResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.DecrementFollowingAndFollowerCount is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) FollowUserCached(context.Context, *connect.Request[v1.FollowUserCachedRequest]) (*connect.Response[v1.FollowUserCachedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.FollowUserCached is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) UnfollowUserCached(context.Context, *connect.Request[v1.UnfollowUserCachedRequest]) (*connect.Response[v1.UnfollowUserCachedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("user.v1.UserService.UnfollowUserCached is not implemented"))
 }

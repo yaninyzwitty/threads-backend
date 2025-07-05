@@ -6,7 +6,7 @@ package processor.v1;
 message OutboxMessage {
     string event_id = 1;
     string event_type = 2;
-    bytes payload = 3;
+    string payload = 3;
     bool published = 4;
 }
 
