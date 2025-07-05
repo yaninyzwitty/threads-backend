@@ -35,7 +35,7 @@ func (r *ProcessorRepository) GetOutboxMessages(ctx context.Context, published b
 	var outboxMessages []*processorv1.OutboxMessage
 
 	var eventId, eventType string
-	var payload []byte
+	var payload string
 	var isPublished bool
 
 	for iter.Scan(&eventId, &eventType, &payload, &isPublished) {

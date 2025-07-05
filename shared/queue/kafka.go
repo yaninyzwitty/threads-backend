@@ -55,7 +55,7 @@ func NewKafkaReader(cfg Config) *kafka.Reader {
 		Topic:            cfg.Topic,
 		MinBytes:         10e3, // 10KB
 		MaxBytes:         10e6, // 10MB
-		StartOffset:      kafka.FirstOffset,
+		StartOffset:      kafka.LastOffset,
 		CommitInterval:   time.Second,
 		Dialer:           newDialer(cfg),
 		SessionTimeout:   45 * time.Second, // Matches session.timeout.ms
