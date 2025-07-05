@@ -7,12 +7,13 @@
 package userv1
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -201,7 +202,7 @@ func (x *OutboxEvent) GetPublished() bool {
 type FollowedEvent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // TODO-remove
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	FollowingId   int64                  `protobuf:"varint,3,opt,name=following_id,json=followingId,proto3" json:"following_id,omitempty"`
 	FollowedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=followed_at,json=followedAt,proto3" json:"followed_at,omitempty"`
 	unknownFields protoimpl.UnknownFields

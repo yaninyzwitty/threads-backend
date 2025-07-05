@@ -28,7 +28,7 @@ message OutboxEvent {
 
 message FollowedEvent {
   string event_id = 1;
-  int64 user_id = 2; // TODO-remove
+  int64 user_id = 2; 
   int64 following_id = 3;
   google.protobuf.Timestamp followed_at = 4;
 }

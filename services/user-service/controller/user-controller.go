@@ -336,6 +336,8 @@ func (c *UserController) DecrementFollowingAndFollowerCount(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid following ID"))
 	}
 
+	// TODO-cHECK whether these work or i use data from kafka
+
 	user, err := auth.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
