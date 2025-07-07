@@ -259,18 +259,12 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, followerID, userId in
 }
 
 func (r *UserRepository) SafeIncrement(ctx context.Context, userID int64, column string) error {
-	var current int
-
-	querySelect := fmt.Sprintf(`
-		SELECT %s FROM threads_keyspace.follower_counts WHERE user_id = ?`, column)
-
-	_ = r.session.Query(querySelect, userID).WithContext(ctx).Scan(&current)
-	// If missing row or null, current = 0
-
 	queryUpdate := fmt.Sprintf(`
-		UPDATE threads_keyspace.follower_counts SET %s = ? WHERE user_id = ?`, column)
+		UPDATE threads_keyspace.follower_counts 
+		SET %s = %s + 1 
+		WHERE user_id = ?`, column, column)
 
-	return r.session.Query(queryUpdate, current+1, userID).WithContext(ctx).Exec()
+	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
 }
 
 func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column string) error {
@@ -280,18 +274,21 @@ func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column
 		SELECT %s FROM threads_keyspace.follower_counts WHERE user_id = ?`, column)
 
 	if err := r.session.Query(querySelect, userID).WithContext(ctx).Scan(&current); err != nil {
-		return fmt.Errorf("fetch current %s failed: %w", column, err)
+		// if row is missing, assume 0 and skip
+		return nil
 	}
 
 	if current <= 0 {
-		// Skip update to avoid negative count
+		// Skip decrement to avoid going negative
 		return nil
 	}
 
 	queryUpdate := fmt.Sprintf(`
-		UPDATE threads_keyspace.follower_counts SET %s = ? WHERE user_id = ?`, column)
+		UPDATE threads_keyspace.follower_counts 
+		SET %s = %s - 1 
+		WHERE user_id = ?`, column, column)
 
-	return r.session.Query(queryUpdate, current-1, userID).WithContext(ctx).Exec()
+	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
 }
 
 func (r *UserRepository) FollowUserCached(ctx context.Context, userId, followingId int64) error {
@@ -318,10 +315,9 @@ func (r *UserRepository) UnfollowUserCached(ctx context.Context, userId, followi
 
 func (r *UserRepository) InsertFollowerCount(ctx context.Context, userId int64) error {
 	insertFollowerCountsQuery := `
-			INSERT INTO threads_keyspace.follower_counts (
-				user_id, follower_count, following_count
-			) VALUES (?, 0, 0)`
+		UPDATE threads_keyspace.follower_counts 
+		SET follower_count = follower_count + 0, following_count = following_count + 0 
+		WHERE user_id = ?`
 
 	return r.session.Query(insertFollowerCountsQuery, userId).WithContext(ctx).Exec()
-
 }
