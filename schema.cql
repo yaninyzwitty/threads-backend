@@ -20,6 +20,7 @@ USING 'StorageAttachedIndex';
 
 
 
+
 -- schema for user tags
 
 CREATE TABLE threads_keyspace.tag_users (

@@ -190,6 +190,32 @@ func main() {
 				}
 				return nil
 			},
+			"user.created": func(b []byte) error {
+				// Step 1: Unmarshal OutboxEvent
+				var event userv1.OutboxEvent
+				if err := protojson.Unmarshal(b, &event); err != nil {
+					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
+				}
+
+				// Step 2: Unmarshal Payload (User) from the event
+				var createdEvent userv1.User
+				if err := protojson.Unmarshal([]byte(event.Payload), &createdEvent); err != nil {
+					return fmt.Errorf("failed to unmarshal User payload: %w", err)
+				}
+
+				// Step 3: Call InsertFollowerCounts
+				_, err := userController.InsertFollowerCounts(
+					ctx,
+					connect.NewRequest(&userv1.InsertFollowerCountsRequest{
+						UserId: createdEvent.Id,
+					}),
+				)
+				if err != nil {
+					return fmt.Errorf("failed to insert follower counts: %w", err)
+				}
+
+				return nil
+			},
 		}
 
 		for {

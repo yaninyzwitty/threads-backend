@@ -7,13 +7,12 @@
 package userv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -1618,6 +1617,94 @@ func (x *UnfollowUserCachedResponse) GetSuccess() bool {
 	return false
 }
 
+type InsertFollowerCountsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InsertFollowerCountsRequest) Reset() {
+	*x = InsertFollowerCountsRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InsertFollowerCountsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InsertFollowerCountsRequest) ProtoMessage() {}
+
+func (x *InsertFollowerCountsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InsertFollowerCountsRequest.ProtoReflect.Descriptor instead.
+func (*InsertFollowerCountsRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *InsertFollowerCountsRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+type InsertFollowerCountsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InsertFollowerCountsResponse) Reset() {
+	*x = InsertFollowerCountsResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InsertFollowerCountsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InsertFollowerCountsResponse) ProtoMessage() {}
+
+func (x *InsertFollowerCountsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InsertFollowerCountsResponse.ProtoReflect.Descriptor instead.
+func (*InsertFollowerCountsResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *InsertFollowerCountsResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_user_v1_user_proto_rawDesc = "" +
@@ -1723,7 +1810,11 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
 	"\ffollowing_id\x18\x02 \x01(\x03R\vfollowingId\"6\n" +
 	"\x1aUnfollowUserCachedResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xed\b\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"6\n" +
+	"\x1bInsertFollowerCountsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"8\n" +
+	"\x1cInsertFollowerCountsResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xd2\t\n" +
 	"\vUserService\x12B\n" +
 	"\tLoginUser\x12\x19.user.v1.LoginUserRequest\x1a\x1a.user.v1.LoginUserResponse\x12E\n" +
 	"\n" +
@@ -1741,8 +1832,9 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\"IncrementFollowingAndFollowerCount\x122.user.v1.IncrementFollowingAndFollowerCountRequest\x1a3.user.v1.IncrementFollowingAndFollowerCountResponse\x12\x8d\x01\n" +
 	"\"DecrementFollowingAndFollowerCount\x122.user.v1.DecrementFollowingAndFollowerCountRequest\x1a3.user.v1.DecrementFollowingAndFollowerCountResponse\x12W\n" +
 	"\x10FollowUserCached\x12 .user.v1.FollowUserCachedRequest\x1a!.user.v1.FollowUserCachedResponse\x12]\n" +
-	"\x12UnfollowUserCached\x12\".user.v1.UnfollowUserCachedRequest\x1a#.user.v1.UnfollowUserCachedResponseB\x8a\x01\n" +
-	"\vcom.user.v1B\tUserProtoP\x01Z3github.com/bufbuild/buf-examples/gen/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
+	"\x12UnfollowUserCached\x12\".user.v1.UnfollowUserCachedRequest\x1a#.user.v1.UnfollowUserCachedResponse\x12c\n" +
+	"\x14InsertFollowerCounts\x12$.user.v1.InsertFollowerCountsRequest\x1a%.user.v1.InsertFollowerCountsResponseB\x94\x01\n" +
+	"\vcom.user.v1B\tUserProtoP\x01Z=github.com/yaninyzwitty/threads-go-backend/gen/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
 	file_user_v1_user_proto_rawDescOnce sync.Once
@@ -1756,7 +1848,7 @@ func file_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_user_v1_user_proto_rawDescData
 }
 
-var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_user_v1_user_proto_goTypes = []any{
 	(*User)(nil),                                       // 0: user.v1.User
 	(*OutboxEvent)(nil),                                // 1: user.v1.OutboxEvent
@@ -1788,13 +1880,15 @@ var file_user_v1_user_proto_goTypes = []any{
 	(*FollowUserCachedResponse)(nil),                   // 27: user.v1.FollowUserCachedResponse
 	(*UnfollowUserCachedRequest)(nil),                  // 28: user.v1.UnfollowUserCachedRequest
 	(*UnfollowUserCachedResponse)(nil),                 // 29: user.v1.UnfollowUserCachedResponse
-	(*timestamppb.Timestamp)(nil),                      // 30: google.protobuf.Timestamp
+	(*InsertFollowerCountsRequest)(nil),                // 30: user.v1.InsertFollowerCountsRequest
+	(*InsertFollowerCountsResponse)(nil),               // 31: user.v1.InsertFollowerCountsResponse
+	(*timestamppb.Timestamp)(nil),                      // 32: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
-	30, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	30, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	30, // 2: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
-	30, // 3: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
+	32, // 0: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	32, // 1: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	32, // 2: user.v1.FollowedEvent.followed_at:type_name -> google.protobuf.Timestamp
+	32, // 3: user.v1.UnfollowedEvent.unfollowed_at:type_name -> google.protobuf.Timestamp
 	0,  // 4: user.v1.CreateUserResponse.user:type_name -> user.v1.User
 	0,  // 5: user.v1.UpdateUserResponse.user:type_name -> user.v1.User
 	0,  // 6: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
@@ -1814,21 +1908,23 @@ var file_user_v1_user_proto_depIdxs = []int32{
 	24, // 20: user.v1.UserService.DecrementFollowingAndFollowerCount:input_type -> user.v1.DecrementFollowingAndFollowerCountRequest
 	26, // 21: user.v1.UserService.FollowUserCached:input_type -> user.v1.FollowUserCachedRequest
 	28, // 22: user.v1.UserService.UnfollowUserCached:input_type -> user.v1.UnfollowUserCachedRequest
-	5,  // 23: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
-	7,  // 24: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
-	9,  // 25: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
-	11, // 26: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
-	21, // 27: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
-	13, // 28: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	15, // 29: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
-	17, // 30: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
-	19, // 31: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
-	23, // 32: user.v1.UserService.IncrementFollowingAndFollowerCount:output_type -> user.v1.IncrementFollowingAndFollowerCountResponse
-	25, // 33: user.v1.UserService.DecrementFollowingAndFollowerCount:output_type -> user.v1.DecrementFollowingAndFollowerCountResponse
-	27, // 34: user.v1.UserService.FollowUserCached:output_type -> user.v1.FollowUserCachedResponse
-	29, // 35: user.v1.UserService.UnfollowUserCached:output_type -> user.v1.UnfollowUserCachedResponse
-	23, // [23:36] is the sub-list for method output_type
-	10, // [10:23] is the sub-list for method input_type
+	30, // 23: user.v1.UserService.InsertFollowerCounts:input_type -> user.v1.InsertFollowerCountsRequest
+	5,  // 24: user.v1.UserService.LoginUser:output_type -> user.v1.LoginUserResponse
+	7,  // 25: user.v1.UserService.CreateUser:output_type -> user.v1.CreateUserResponse
+	9,  // 26: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
+	11, // 27: user.v1.UserService.UpdateUser:output_type -> user.v1.UpdateUserResponse
+	21, // 28: user.v1.UserService.DeleteUser:output_type -> user.v1.DeleteUserResponse
+	13, // 29: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	15, // 30: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
+	17, // 31: user.v1.UserService.FollowUser:output_type -> user.v1.FollowUserResponse
+	19, // 32: user.v1.UserService.UnfollowUser:output_type -> user.v1.UnfollowUserResponse
+	23, // 33: user.v1.UserService.IncrementFollowingAndFollowerCount:output_type -> user.v1.IncrementFollowingAndFollowerCountResponse
+	25, // 34: user.v1.UserService.DecrementFollowingAndFollowerCount:output_type -> user.v1.DecrementFollowingAndFollowerCountResponse
+	27, // 35: user.v1.UserService.FollowUserCached:output_type -> user.v1.FollowUserCachedResponse
+	29, // 36: user.v1.UserService.UnfollowUserCached:output_type -> user.v1.UnfollowUserCachedResponse
+	31, // 37: user.v1.UserService.InsertFollowerCounts:output_type -> user.v1.InsertFollowerCountsResponse
+	24, // [24:38] is the sub-list for method output_type
+	10, // [10:24] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name
 	10, // [10:10] is the sub-list for extension extendee
 	0,  // [0:10] is the sub-list for field type_name
@@ -1845,7 +1941,7 @@ func file_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_v1_user_proto_rawDesc), len(file_user_v1_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

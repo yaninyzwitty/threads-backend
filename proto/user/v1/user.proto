@@ -3,7 +3,10 @@ syntax = "proto3";
 package user.v1;
 
 
+
 import "google/protobuf/timestamp.proto";
+
+
 
 message User {
   int64 id = 1;
@@ -169,6 +172,16 @@ message UnfollowUserCachedResponse {
   bool success = 1;
 }
 
+message InsertFollowerCountsRequest {
+  int64 user_id = 1;
+}
+
+message InsertFollowerCountsResponse {
+  bool success = 1;
+}
+
+
+
 service UserService {
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
@@ -183,6 +196,8 @@ service UserService {
   rpc DecrementFollowingAndFollowerCount(DecrementFollowingAndFollowerCountRequest) returns (DecrementFollowingAndFollowerCountResponse);
   rpc FollowUserCached(FollowUserCachedRequest) returns (FollowUserCachedResponse);
   rpc UnfollowUserCached(UnfollowUserCachedRequest) returns (UnfollowUserCachedResponse);
+  rpc InsertFollowerCounts(InsertFollowerCountsRequest) returns (InsertFollowerCountsResponse);
+  
   
  
 

@@ -61,7 +61,7 @@ func (c *UserController) CreateUser(
 		UpdatedAt:     timestamppb.Now(),
 	}
 
-	if err := c.userRepo.CreateUser(ctx, user); err != nil {
+	if err := c.userRepo.CreateUserWithInitialCounts(ctx, user); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create user: %w", err))
 	}
 
@@ -298,20 +298,15 @@ func (c *UserController) IncrementFollowingAndFollowerCount(
 	req *connect.Request[userv1.IncrementFollowingAndFollowerCountRequest],
 ) (*connect.Response[userv1.IncrementFollowingAndFollowerCountResponse], error) {
 
-	if req.Msg.FollowedEvent.FollowingId == 0 {
+	if req.Msg.FollowedEvent.FollowingId == 0 || req.Msg.FollowedEvent.UserId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid following ID"))
-	}
-
-	user, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
 
 	// Increment sender's following count
 	g.Go(func() error {
-		return c.userRepo.IncrementFollowingCount(gctx, user.Id)
+		return c.userRepo.IncrementFollowingCount(gctx, req.Msg.FollowedEvent.UserId)
 	})
 
 	// Increment recipient's follower count
@@ -332,22 +327,15 @@ func (c *UserController) DecrementFollowingAndFollowerCount(
 	req *connect.Request[userv1.DecrementFollowingAndFollowerCountRequest],
 ) (*connect.Response[userv1.DecrementFollowingAndFollowerCountResponse], error) {
 
-	if req.Msg.UnfollowedEvent.FollowingId == 0 {
+	if req.Msg.UnfollowedEvent.FollowingId == 0 || req.Msg.UnfollowedEvent.UserId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid following ID"))
-	}
-
-	// TODO-cHECK whether these work or i use data from kafka
-
-	user, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
 
 	// Decrement sender's following count
 	g.Go(func() error {
-		return c.userRepo.DecrementFollowingCount(gctx, user.Id)
+		return c.userRepo.DecrementFollowingCount(gctx, req.Msg.UnfollowedEvent.UserId)
 	})
 
 	// Decrement recipient's follower count
@@ -368,16 +356,11 @@ func (c *UserController) FollowUserCached(
 	req *connect.Request[userv1.FollowUserCachedRequest],
 ) (*connect.Response[userv1.FollowUserCachedResponse], error) {
 
-	if req.Msg.FollowingId == 0 {
+	if req.Msg.FollowingId == 0 || req.Msg.UserId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid following ID"))
 	}
 
-	user, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
-	}
-
-	if err := c.userRepo.FollowUserCached(ctx, user.Id, req.Msg.FollowingId); err != nil {
+	if err := c.userRepo.FollowUserCached(ctx, req.Msg.UserId, req.Msg.FollowingId); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to cache follow: %w", err))
 	}
 
@@ -390,18 +373,30 @@ func (c *UserController) UnfollowUserCached(
 	req *connect.Request[userv1.UnfollowUserCachedRequest],
 ) (*connect.Response[userv1.UnfollowUserCachedResponse], error) {
 
-	if req.Msg.FollowingId == 0 {
+	if req.Msg.FollowingId == 0 || req.Msg.UserId == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid following ID"))
 	}
 
-	user, err := auth.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthenticated"))
-	}
-
-	if err := c.userRepo.UnfollowUserCached(ctx, user.Id, req.Msg.FollowingId); err != nil {
+	if err := c.userRepo.UnfollowUserCached(ctx, req.Msg.UserId, req.Msg.FollowingId); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to cache unfollow: %w", err))
 	}
 
 	return connect.NewResponse(&userv1.UnfollowUserCachedResponse{Success: true}), nil
+}
+
+func (c *UserController) InsertFollowerCounts(
+	ctx context.Context,
+	req *connect.Request[userv1.InsertFollowerCountsRequest],
+) (*connect.Response[userv1.InsertFollowerCountsResponse], error) {
+	if req.Msg.UserId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user id is missing"))
+	}
+
+	if err := c.userRepo.InsertFollowerCount(ctx, req.Msg.UserId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed insert follower counts: %w", err))
+	}
+	return connect.NewResponse(&userv1.InsertFollowerCountsResponse{
+		Success: true,
+	}), nil
+
 }
