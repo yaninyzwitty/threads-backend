@@ -303,15 +303,14 @@ func (c *UserController) IncrementFollowingAndFollowerCount(
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
-
-	// Increment sender's following count
 	g.Go(func() error {
-		return c.userRepo.IncrementFollowingCount(gctx, req.Msg.FollowedEvent.UserId)
+		// A (the follower) -> increment their following_count
+		return c.userRepo.SafeIncrement(gctx, req.Msg.FollowedEvent.UserId, "following_count")
 	})
 
-	// Increment recipient's follower count
 	g.Go(func() error {
-		return c.userRepo.IncrementFollowerCount(gctx, req.Msg.FollowedEvent.FollowingId)
+		// B (the one being followed) -> increment their follower_count
+		return c.userRepo.SafeIncrement(gctx, req.Msg.FollowedEvent.FollowingId, "follower_count")
 	})
 
 	if err := g.Wait(); err != nil {
@@ -333,14 +332,14 @@ func (c *UserController) DecrementFollowingAndFollowerCount(
 
 	g, gctx := errgroup.WithContext(ctx)
 
-	// Decrement sender's following count
 	g.Go(func() error {
-		return c.userRepo.DecrementFollowingCount(gctx, req.Msg.UnfollowedEvent.UserId)
+		// User A: decrement following_count
+		return c.userRepo.SafeDecrement(gctx, req.Msg.UnfollowedEvent.UserId, "following_count")
 	})
 
-	// Decrement recipient's follower count
 	g.Go(func() error {
-		return c.userRepo.DecrementFollowerCount(gctx, req.Msg.UnfollowedEvent.FollowingId)
+		// User B: decrement follower_count
+		return c.userRepo.SafeDecrement(gctx, req.Msg.UnfollowedEvent.FollowingId, "follower_count")
 	})
 
 	if err := g.Wait(); err != nil {

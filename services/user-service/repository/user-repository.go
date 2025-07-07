@@ -258,27 +258,21 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, followerID, userId in
 	return nil
 }
 
-func (r *UserRepository) IncrementFollowingCount(ctx context.Context, userId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count + 1 WHERE user_id = ?`
-	return r.session.Query(query, userId).WithContext(ctx).Exec()
+func (r *UserRepository) SafeIncrement(ctx context.Context, userID int64, column string) error {
+	var current int
+
+	querySelect := fmt.Sprintf(`
+		SELECT %s FROM threads_keyspace.follower_counts WHERE user_id = ?`, column)
+
+	_ = r.session.Query(querySelect, userID).WithContext(ctx).Scan(&current)
+	// If missing row or null, current = 0
+
+	queryUpdate := fmt.Sprintf(`
+		UPDATE threads_keyspace.follower_counts SET %s = ? WHERE user_id = ?`, column)
+
+	return r.session.Query(queryUpdate, current+1, userID).WithContext(ctx).Exec()
 }
 
-func (r *UserRepository) IncrementFollowerCount(ctx context.Context, recipientId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count + 1 WHERE user_id = ?`
-	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
-}
-
-func (r *UserRepository) DecrementFollowingCount(ctx context.Context, userId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count - 1 WHERE user_id = ?`
-	return r.session.Query(query, userId).WithContext(ctx).Exec()
-}
-
-func (r *UserRepository) DecrementFollowerCount(ctx context.Context, recipientId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count - 1 WHERE user_id = ?`
-	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
-}
-
-// TODO - Implement SafeIncrement and SafeDecrement methods to avoid negative counts
 func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column string) error {
 	var current int
 
