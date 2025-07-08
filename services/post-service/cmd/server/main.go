@@ -14,11 +14,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/yaninyzwitty/threads-go-backend/gen/posts/v1/postsv1connect"
 	"github.com/yaninyzwitty/threads-go-backend/services/post-service/controller"
+	"github.com/yaninyzwitty/threads-go-backend/services/post-service/kafka"
 	"github.com/yaninyzwitty/threads-go-backend/services/post-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
 	"github.com/yaninyzwitty/threads-go-backend/shared/pkg"
+	"github.com/yaninyzwitty/threads-go-backend/shared/queue"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -66,6 +68,15 @@ func main() {
 	}
 	defer dbSession.Close()
 
+	kafkaReader := queue.NewKafkaReader(queue.Config{
+		Brokers:  cfg.Queue.Brokers,
+		Topic:    cfg.Queue.Topic,
+		GroupID:  cfg.Queue.GroupID,
+		Username: cfg.Queue.Username,
+		Password: helpers.GetEnvOrDefault("KAFKA_PASSWORD", ""),
+	})
+	defer kafkaReader.Close()
+
 	postRepo := repository.NewPostRepository(dbSession)
 	postController := controller.NewPostController(postRepo)
 
@@ -100,7 +111,7 @@ func main() {
 	}()
 
 	// Start Kafka consumer
-	// kafka.StartKafkaConsumer(ctx, kafkaReader, userController)
+	kafka.StartKafkaConsumer(ctx, kafkaReader, postController)
 
 	slog.Info("starting ConnectRPC server", "address", server.Addr, "pid", os.Getpid())
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

@@ -140,3 +140,37 @@ func (r *PostRepository) ListPostsByUser(
 		PagingState: iter.PageState(), // nil if no more pages
 	}, nil
 }
+
+func (r *PostRepository) CreatePostIndexedByUser(ctx context.Context, post *postv1.Post) error {
+	query := `
+		INSERT INTO threads_keyspace.posts_by_user 
+		(post_id, user_id, content, image_url, created_at) 
+		VALUES (?, ?, ?, ?, ?)`
+
+	err := r.session.Query(query,
+		post.Id,
+		post.UserId,
+		post.Content,
+		post.ImageUrl,
+		post.CreatedAt.AsTime(), // assuming created_at is a google.protobuf.Timestamp
+	).WithContext(ctx).Exec()
+
+	if err != nil {
+		return fmt.Errorf("failed to create post for user %d: %w", post.UserId, err)
+	}
+	return nil
+}
+
+func (r *PostRepository) InsertEngagementsCount(ctx context.Context, postId int64) error {
+	query := `
+		UPDATE threads_keyspace.post_engagements
+		SET like_count = like_count + 0,
+		    comment_count = comment_count + 0,
+		    share_count = share_count + 0
+		WHERE post_id = ?`
+
+	if err := r.session.Query(query, postId).WithContext(ctx).Exec(); err != nil {
+		return fmt.Errorf("failed to insert engagements count for post %d: %w", postId, err)
+	}
+	return nil
+}
