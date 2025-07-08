@@ -50,7 +50,7 @@ func main() {
 	res, err := userServiceClient.FollowUser(context.Background(), req)
 
 	if err != nil {
-		slog.Error("failed to login user ", "error", err)
+		slog.Error("failed to follow user ", "error", err)
 		os.Exit(1)
 	}
 

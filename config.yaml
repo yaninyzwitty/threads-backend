@@ -1,7 +1,9 @@
 user-server:
   port: 50051
-processor-server:
+post-server:
   port: 50052
+processor-server:
+  port: 50053
 queue:
   brokers:
     - "kafka-gcp-europewest1.streaming.datastax.com:9093"

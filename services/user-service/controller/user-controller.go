@@ -392,7 +392,7 @@ func (c *UserController) InsertFollowerCounts(
 	}
 
 	if err := c.userRepo.InsertFollowerCount(ctx, req.Msg.UserId); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed insert follower counts: %w", err))
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to insert follower counts: %w", err))
 	}
 	return connect.NewResponse(&userv1.InsertFollowerCountsResponse{
 		Success: true,
