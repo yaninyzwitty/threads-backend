@@ -125,10 +125,16 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, userCont
 			if !ok {
 				slog.Warn("no handler found for event key", "key", eventKey)
 				continue
+
 			}
 
 			if err := handler(msg.Value); err != nil {
 				slog.Error("event handler failed", "key", eventKey, "error", err)
+				continue
+			}
+
+			if err := kafkaReader.CommitMessages(ctx, msg); err != nil {
+				slog.Error("failed to commit kafka message", "error", err)
 			}
 		}
 	}()

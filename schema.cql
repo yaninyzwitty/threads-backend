@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.posts (
   content TEXT,
   image_url TEXT,
   created_at TIMESTAMP,
-  PRIMARY KEY ((post_id));
+  PRIMARY KEY ((post_id))
 );
 
 

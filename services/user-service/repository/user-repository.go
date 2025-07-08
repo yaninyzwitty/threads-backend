@@ -259,36 +259,74 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, followerID, userId in
 }
 
 func (r *UserRepository) SafeIncrement(ctx context.Context, userID int64, column string) error {
-	queryUpdate := fmt.Sprintf(`
+	// Only allow known counter columns
+	var allowed = map[string]struct{}{
+		"following_count": {},
+		"follower_count":  {},
+	}
+
+	if _, ok := allowed[column]; !ok {
+		return fmt.Errorf("invalid column name: %q", column)
+	}
+
+	// Counter columns must only be incremented/decremented, not set directly
+	query := fmt.Sprintf(`
 		UPDATE threads_keyspace.follower_counts 
 		SET %s = %s + 1 
 		WHERE user_id = ?`, column, column)
 
-	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
+	return r.session.
+		Query(query, userID).
+		WithContext(ctx).
+		Consistency(gocql.One).
+		Exec()
 }
 
 func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column string) error {
-	var current int
+	// Only allow safe counter columns
+	var allowed = map[string]struct{}{
+		"following_count": {},
+		"follower_count":  {},
+	}
 
+	if _, ok := allowed[column]; !ok {
+		return fmt.Errorf("invalid column name: %q", column)
+	}
+
+	// Read the current counter value
 	querySelect := fmt.Sprintf(`
-		SELECT %s FROM threads_keyspace.follower_counts WHERE user_id = ?`, column)
+		SELECT %s FROM threads_keyspace.follower_counts 
+		WHERE user_id = ?`, column)
 
-	if err := r.session.Query(querySelect, userID).WithContext(ctx).Scan(&current); err != nil {
-		// if row is missing, assume 0 and skip
-		return nil
+	var current int64 // counters use bigint
+	if err := r.session.
+		Query(querySelect, userID).
+		WithContext(ctx).
+		Consistency(gocql.One).
+		Scan(&current); err != nil {
+		// If row doesn't exist, treat as 0 and skip
+		if err == gocql.ErrNotFound {
+			return nil
+		}
+		return fmt.Errorf("failed to fetch counter: %w", err)
 	}
 
 	if current <= 0 {
-		// Skip decrement to avoid going negative
+		// Avoid decrementing below 0
 		return nil
 	}
 
+	// Perform the safe decrement
 	queryUpdate := fmt.Sprintf(`
 		UPDATE threads_keyspace.follower_counts 
 		SET %s = %s - 1 
 		WHERE user_id = ?`, column, column)
 
-	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
+	return r.session.
+		Query(queryUpdate, userID).
+		WithContext(ctx).
+		Consistency(gocql.One).
+		Exec()
 }
 
 func (r *UserRepository) FollowUserCached(ctx context.Context, userId, followingId int64) error {
