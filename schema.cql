@@ -71,3 +71,33 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.outbox (
 CREATE CUSTOM INDEX ON threads_keyspace.outbox (published)
 USING 'StorageAttachedIndex';
 
+
+-- no sai
+-- For listing posts by a user (paginated)
+CREATE TABLE IF NOT EXISTS threads_keyspace.posts_by_user (
+  user_id BIGINT,
+  post_id BIGINT,
+  content TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP,
+  PRIMARY KEY ((user_id), post_id)
+) WITH CLUSTERING ORDER BY (post_id DESC);
+
+-- For direct post lookup
+CREATE TABLE IF NOT EXISTS threads_keyspace.posts (
+  post_id BIGINT,
+  user_id BIGINT,
+  content TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP,
+  PRIMARY KEY ((post_id));
+);
+
+
+CREATE TABLE IF NOT EXISTS threads_keyspace.post_engagements (
+  post_id BIGINT,
+  like_count COUNTER,
+  comment_count COUNTER,
+  share_count COUNTER,
+  PRIMARY KEY (post_id)
+);
