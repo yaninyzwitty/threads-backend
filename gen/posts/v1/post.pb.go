@@ -201,6 +201,182 @@ func (x *OutboxEvent) GetPublished() bool {
 	return false
 }
 
+type CreatePostIndexedByUserRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Post          *Post                  `protobuf:"bytes,1,opt,name=post,proto3" json:"post,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatePostIndexedByUserRequest) Reset() {
+	*x = CreatePostIndexedByUserRequest{}
+	mi := &file_posts_v1_post_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePostIndexedByUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePostIndexedByUserRequest) ProtoMessage() {}
+
+func (x *CreatePostIndexedByUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_posts_v1_post_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePostIndexedByUserRequest.ProtoReflect.Descriptor instead.
+func (*CreatePostIndexedByUserRequest) Descriptor() ([]byte, []int) {
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CreatePostIndexedByUserRequest) GetPost() *Post {
+	if x != nil {
+		return x.Post
+	}
+	return nil
+}
+
+type CreatePostIndexedByUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatePostIndexedByUserResponse) Reset() {
+	*x = CreatePostIndexedByUserResponse{}
+	mi := &file_posts_v1_post_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePostIndexedByUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePostIndexedByUserResponse) ProtoMessage() {}
+
+func (x *CreatePostIndexedByUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_posts_v1_post_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePostIndexedByUserResponse.ProtoReflect.Descriptor instead.
+func (*CreatePostIndexedByUserResponse) Descriptor() ([]byte, []int) {
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreatePostIndexedByUserResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type InitializePostEngagementsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PostId        int64                  `protobuf:"varint,1,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitializePostEngagementsRequest) Reset() {
+	*x = InitializePostEngagementsRequest{}
+	mi := &file_posts_v1_post_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitializePostEngagementsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitializePostEngagementsRequest) ProtoMessage() {}
+
+func (x *InitializePostEngagementsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_posts_v1_post_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitializePostEngagementsRequest.ProtoReflect.Descriptor instead.
+func (*InitializePostEngagementsRequest) Descriptor() ([]byte, []int) {
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *InitializePostEngagementsRequest) GetPostId() int64 {
+	if x != nil {
+		return x.PostId
+	}
+	return 0
+}
+
+type InitializePostEngagementsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	True          bool                   `protobuf:"varint,1,opt,name=true,proto3" json:"true,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InitializePostEngagementsResponse) Reset() {
+	*x = InitializePostEngagementsResponse{}
+	mi := &file_posts_v1_post_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InitializePostEngagementsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InitializePostEngagementsResponse) ProtoMessage() {}
+
+func (x *InitializePostEngagementsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_posts_v1_post_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InitializePostEngagementsResponse.ProtoReflect.Descriptor instead.
+func (*InitializePostEngagementsResponse) Descriptor() ([]byte, []int) {
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *InitializePostEngagementsResponse) GetTrue() bool {
+	if x != nil {
+		return x.True
+	}
+	return false
+}
+
 type CreatePostRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
@@ -212,7 +388,7 @@ type CreatePostRequest struct {
 
 func (x *CreatePostRequest) Reset() {
 	*x = CreatePostRequest{}
-	mi := &file_posts_v1_post_proto_msgTypes[2]
+	mi := &file_posts_v1_post_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -224,7 +400,7 @@ func (x *CreatePostRequest) String() string {
 func (*CreatePostRequest) ProtoMessage() {}
 
 func (x *CreatePostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[2]
+	mi := &file_posts_v1_post_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -237,7 +413,7 @@ func (x *CreatePostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePostRequest.ProtoReflect.Descriptor instead.
 func (*CreatePostRequest) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{2}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreatePostRequest) GetContent() string {
@@ -270,7 +446,7 @@ type CreatePostResponse struct {
 
 func (x *CreatePostResponse) Reset() {
 	*x = CreatePostResponse{}
-	mi := &file_posts_v1_post_proto_msgTypes[3]
+	mi := &file_posts_v1_post_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +458,7 @@ func (x *CreatePostResponse) String() string {
 func (*CreatePostResponse) ProtoMessage() {}
 
 func (x *CreatePostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[3]
+	mi := &file_posts_v1_post_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +471,7 @@ func (x *CreatePostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePostResponse.ProtoReflect.Descriptor instead.
 func (*CreatePostResponse) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{3}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreatePostResponse) GetPost() *Post {
@@ -314,7 +490,7 @@ type GetPostRequest struct {
 
 func (x *GetPostRequest) Reset() {
 	*x = GetPostRequest{}
-	mi := &file_posts_v1_post_proto_msgTypes[4]
+	mi := &file_posts_v1_post_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -326,7 +502,7 @@ func (x *GetPostRequest) String() string {
 func (*GetPostRequest) ProtoMessage() {}
 
 func (x *GetPostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[4]
+	mi := &file_posts_v1_post_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -339,7 +515,7 @@ func (x *GetPostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPostRequest.ProtoReflect.Descriptor instead.
 func (*GetPostRequest) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{4}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetPostRequest) GetPostId() int64 {
@@ -358,7 +534,7 @@ type GetPostResponse struct {
 
 func (x *GetPostResponse) Reset() {
 	*x = GetPostResponse{}
-	mi := &file_posts_v1_post_proto_msgTypes[5]
+	mi := &file_posts_v1_post_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -370,7 +546,7 @@ func (x *GetPostResponse) String() string {
 func (*GetPostResponse) ProtoMessage() {}
 
 func (x *GetPostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[5]
+	mi := &file_posts_v1_post_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -383,7 +559,7 @@ func (x *GetPostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPostResponse.ProtoReflect.Descriptor instead.
 func (*GetPostResponse) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{5}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetPostResponse) GetPost() *Post {
@@ -404,7 +580,7 @@ type ListPostsByUserRequest struct {
 
 func (x *ListPostsByUserRequest) Reset() {
 	*x = ListPostsByUserRequest{}
-	mi := &file_posts_v1_post_proto_msgTypes[6]
+	mi := &file_posts_v1_post_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -416,7 +592,7 @@ func (x *ListPostsByUserRequest) String() string {
 func (*ListPostsByUserRequest) ProtoMessage() {}
 
 func (x *ListPostsByUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[6]
+	mi := &file_posts_v1_post_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -429,7 +605,7 @@ func (x *ListPostsByUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPostsByUserRequest.ProtoReflect.Descriptor instead.
 func (*ListPostsByUserRequest) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{6}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListPostsByUserRequest) GetUserId() int64 {
@@ -463,7 +639,7 @@ type ListPostsByUserResponse struct {
 
 func (x *ListPostsByUserResponse) Reset() {
 	*x = ListPostsByUserResponse{}
-	mi := &file_posts_v1_post_proto_msgTypes[7]
+	mi := &file_posts_v1_post_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +651,7 @@ func (x *ListPostsByUserResponse) String() string {
 func (*ListPostsByUserResponse) ProtoMessage() {}
 
 func (x *ListPostsByUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[7]
+	mi := &file_posts_v1_post_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,7 +664,7 @@ func (x *ListPostsByUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPostsByUserResponse.ProtoReflect.Descriptor instead.
 func (*ListPostsByUserResponse) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{7}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListPostsByUserResponse) GetPosts() []*Post {
@@ -514,7 +690,7 @@ type DeletePostRequest struct {
 
 func (x *DeletePostRequest) Reset() {
 	*x = DeletePostRequest{}
-	mi := &file_posts_v1_post_proto_msgTypes[8]
+	mi := &file_posts_v1_post_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -526,7 +702,7 @@ func (x *DeletePostRequest) String() string {
 func (*DeletePostRequest) ProtoMessage() {}
 
 func (x *DeletePostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[8]
+	mi := &file_posts_v1_post_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -539,7 +715,7 @@ func (x *DeletePostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePostRequest.ProtoReflect.Descriptor instead.
 func (*DeletePostRequest) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{8}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeletePostRequest) GetPostId() int64 {
@@ -558,7 +734,7 @@ type DeletePostResponse struct {
 
 func (x *DeletePostResponse) Reset() {
 	*x = DeletePostResponse{}
-	mi := &file_posts_v1_post_proto_msgTypes[9]
+	mi := &file_posts_v1_post_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -570,7 +746,7 @@ func (x *DeletePostResponse) String() string {
 func (*DeletePostResponse) ProtoMessage() {}
 
 func (x *DeletePostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_posts_v1_post_proto_msgTypes[9]
+	mi := &file_posts_v1_post_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -583,7 +759,7 @@ func (x *DeletePostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePostResponse.ProtoReflect.Descriptor instead.
 func (*DeletePostResponse) Descriptor() ([]byte, []int) {
-	return file_posts_v1_post_proto_rawDescGZIP(), []int{9}
+	return file_posts_v1_post_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *DeletePostResponse) GetSuccess() bool {
@@ -617,7 +793,15 @@ const file_posts_v1_post_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\x02 \x01(\tR\teventType\x12\x18\n" +
 	"\apayload\x18\x03 \x01(\tR\apayload\x12\x1c\n" +
-	"\tpublished\x18\x04 \x01(\bR\tpublished\"c\n" +
+	"\tpublished\x18\x04 \x01(\bR\tpublished\"D\n" +
+	"\x1eCreatePostIndexedByUserRequest\x12\"\n" +
+	"\x04post\x18\x01 \x01(\v2\x0e.posts.v1.PostR\x04post\";\n" +
+	"\x1fCreatePostIndexedByUserResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\";\n" +
+	" InitializePostEngagementsRequest\x12\x17\n" +
+	"\apost_id\x18\x01 \x01(\x03R\x06postId\"7\n" +
+	"!InitializePostEngagementsResponse\x12\x12\n" +
+	"\x04true\x18\x01 \x01(\bR\x04true\"c\n" +
 	"\x11CreatePostRequest\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12\x1b\n" +
 	"\timage_url\x18\x02 \x01(\tR\bimageUrl\x12\x17\n" +
@@ -638,14 +822,16 @@ const file_posts_v1_post_proto_rawDesc = "" +
 	"\x11DeletePostRequest\x12\x17\n" +
 	"\apost_id\x18\x01 \x01(\x03R\x06postId\".\n" +
 	"\x12DeletePostResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xb7\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\x9d\x04\n" +
 	"\vPostService\x12G\n" +
 	"\n" +
 	"CreatePost\x12\x1b.posts.v1.CreatePostRequest\x1a\x1c.posts.v1.CreatePostResponse\x12>\n" +
 	"\aGetPost\x12\x18.posts.v1.GetPostRequest\x1a\x19.posts.v1.GetPostResponse\x12V\n" +
 	"\x0fListPostsByUser\x12 .posts.v1.ListPostsByUserRequest\x1a!.posts.v1.ListPostsByUserResponse\x12G\n" +
 	"\n" +
-	"DeletePost\x12\x1b.posts.v1.DeletePostRequest\x1a\x1c.posts.v1.DeletePostResponseB\x9b\x01\n" +
+	"DeletePost\x12\x1b.posts.v1.DeletePostRequest\x1a\x1c.posts.v1.DeletePostResponse\x12n\n" +
+	"\x17CreatePostIndexedByUser\x12(.posts.v1.CreatePostIndexedByUserRequest\x1a).posts.v1.CreatePostIndexedByUserResponse\x12t\n" +
+	"\x19InitializePostEngagements\x12*.posts.v1.InitializePostEngagementsRequest\x1a+.posts.v1.InitializePostEngagementsResponseB\x9b\x01\n" +
 	"\fcom.posts.v1B\tPostProtoP\x01Z?github.com/yaninyzwitty/threads-go-backend/gen/posts/v1;postsv1\xa2\x02\x03PXX\xaa\x02\bPosts.V1\xca\x02\bPosts\\V1\xe2\x02\x14Posts\\V1\\GPBMetadata\xea\x02\tPosts::V1b\x06proto3"
 
 var (
@@ -660,38 +846,47 @@ func file_posts_v1_post_proto_rawDescGZIP() []byte {
 	return file_posts_v1_post_proto_rawDescData
 }
 
-var file_posts_v1_post_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_posts_v1_post_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_posts_v1_post_proto_goTypes = []any{
-	(*Post)(nil),                    // 0: posts.v1.Post
-	(*OutboxEvent)(nil),             // 1: posts.v1.OutboxEvent
-	(*CreatePostRequest)(nil),       // 2: posts.v1.CreatePostRequest
-	(*CreatePostResponse)(nil),      // 3: posts.v1.CreatePostResponse
-	(*GetPostRequest)(nil),          // 4: posts.v1.GetPostRequest
-	(*GetPostResponse)(nil),         // 5: posts.v1.GetPostResponse
-	(*ListPostsByUserRequest)(nil),  // 6: posts.v1.ListPostsByUserRequest
-	(*ListPostsByUserResponse)(nil), // 7: posts.v1.ListPostsByUserResponse
-	(*DeletePostRequest)(nil),       // 8: posts.v1.DeletePostRequest
-	(*DeletePostResponse)(nil),      // 9: posts.v1.DeletePostResponse
-	(*timestamppb.Timestamp)(nil),   // 10: google.protobuf.Timestamp
+	(*Post)(nil),                              // 0: posts.v1.Post
+	(*OutboxEvent)(nil),                       // 1: posts.v1.OutboxEvent
+	(*CreatePostIndexedByUserRequest)(nil),    // 2: posts.v1.CreatePostIndexedByUserRequest
+	(*CreatePostIndexedByUserResponse)(nil),   // 3: posts.v1.CreatePostIndexedByUserResponse
+	(*InitializePostEngagementsRequest)(nil),  // 4: posts.v1.InitializePostEngagementsRequest
+	(*InitializePostEngagementsResponse)(nil), // 5: posts.v1.InitializePostEngagementsResponse
+	(*CreatePostRequest)(nil),                 // 6: posts.v1.CreatePostRequest
+	(*CreatePostResponse)(nil),                // 7: posts.v1.CreatePostResponse
+	(*GetPostRequest)(nil),                    // 8: posts.v1.GetPostRequest
+	(*GetPostResponse)(nil),                   // 9: posts.v1.GetPostResponse
+	(*ListPostsByUserRequest)(nil),            // 10: posts.v1.ListPostsByUserRequest
+	(*ListPostsByUserResponse)(nil),           // 11: posts.v1.ListPostsByUserResponse
+	(*DeletePostRequest)(nil),                 // 12: posts.v1.DeletePostRequest
+	(*DeletePostResponse)(nil),                // 13: posts.v1.DeletePostResponse
+	(*timestamppb.Timestamp)(nil),             // 14: google.protobuf.Timestamp
 }
 var file_posts_v1_post_proto_depIdxs = []int32{
-	10, // 0: posts.v1.Post.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 1: posts.v1.CreatePostResponse.post:type_name -> posts.v1.Post
-	0,  // 2: posts.v1.GetPostResponse.post:type_name -> posts.v1.Post
-	0,  // 3: posts.v1.ListPostsByUserResponse.posts:type_name -> posts.v1.Post
-	2,  // 4: posts.v1.PostService.CreatePost:input_type -> posts.v1.CreatePostRequest
-	4,  // 5: posts.v1.PostService.GetPost:input_type -> posts.v1.GetPostRequest
-	6,  // 6: posts.v1.PostService.ListPostsByUser:input_type -> posts.v1.ListPostsByUserRequest
-	8,  // 7: posts.v1.PostService.DeletePost:input_type -> posts.v1.DeletePostRequest
-	3,  // 8: posts.v1.PostService.CreatePost:output_type -> posts.v1.CreatePostResponse
-	5,  // 9: posts.v1.PostService.GetPost:output_type -> posts.v1.GetPostResponse
-	7,  // 10: posts.v1.PostService.ListPostsByUser:output_type -> posts.v1.ListPostsByUserResponse
-	9,  // 11: posts.v1.PostService.DeletePost:output_type -> posts.v1.DeletePostResponse
-	8,  // [8:12] is the sub-list for method output_type
-	4,  // [4:8] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	14, // 0: posts.v1.Post.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 1: posts.v1.CreatePostIndexedByUserRequest.post:type_name -> posts.v1.Post
+	0,  // 2: posts.v1.CreatePostResponse.post:type_name -> posts.v1.Post
+	0,  // 3: posts.v1.GetPostResponse.post:type_name -> posts.v1.Post
+	0,  // 4: posts.v1.ListPostsByUserResponse.posts:type_name -> posts.v1.Post
+	6,  // 5: posts.v1.PostService.CreatePost:input_type -> posts.v1.CreatePostRequest
+	8,  // 6: posts.v1.PostService.GetPost:input_type -> posts.v1.GetPostRequest
+	10, // 7: posts.v1.PostService.ListPostsByUser:input_type -> posts.v1.ListPostsByUserRequest
+	12, // 8: posts.v1.PostService.DeletePost:input_type -> posts.v1.DeletePostRequest
+	2,  // 9: posts.v1.PostService.CreatePostIndexedByUser:input_type -> posts.v1.CreatePostIndexedByUserRequest
+	4,  // 10: posts.v1.PostService.InitializePostEngagements:input_type -> posts.v1.InitializePostEngagementsRequest
+	7,  // 11: posts.v1.PostService.CreatePost:output_type -> posts.v1.CreatePostResponse
+	9,  // 12: posts.v1.PostService.GetPost:output_type -> posts.v1.GetPostResponse
+	11, // 13: posts.v1.PostService.ListPostsByUser:output_type -> posts.v1.ListPostsByUserResponse
+	13, // 14: posts.v1.PostService.DeletePost:output_type -> posts.v1.DeletePostResponse
+	3,  // 15: posts.v1.PostService.CreatePostIndexedByUser:output_type -> posts.v1.CreatePostIndexedByUserResponse
+	5,  // 16: posts.v1.PostService.InitializePostEngagements:output_type -> posts.v1.InitializePostEngagementsResponse
+	11, // [11:17] is the sub-list for method output_type
+	5,  // [5:11] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_posts_v1_post_proto_init() }
@@ -705,7 +900,7 @@ func file_posts_v1_post_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_posts_v1_post_proto_rawDesc), len(file_posts_v1_post_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -28,12 +28,30 @@ message OutboxEvent {
   bool published = 4;
 }
 
+message CreatePostIndexedByUserRequest {
+  Post post = 1;
+}
+
+message CreatePostIndexedByUserResponse {
+  bool success = 1;
+}
+
+message InitializePostEngagementsRequest {
+  int64 post_id = 1;
+
+}
+
+message InitializePostEngagementsResponse {
+  bool true = 1;
+}
 // Service definition
 service PostService {
   rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
   rpc GetPost(GetPostRequest) returns (GetPostResponse);
   rpc ListPostsByUser(ListPostsByUserRequest) returns (ListPostsByUserResponse);
   rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+  rpc CreatePostIndexedByUser(CreatePostIndexedByUserRequest) returns (CreatePostIndexedByUserResponse);
+  rpc InitializePostEngagements(InitializePostEngagementsRequest) returns (InitializePostEngagementsResponse);
 }
 
 // Request/Response messages

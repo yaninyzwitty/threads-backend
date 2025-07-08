@@ -28,8 +28,6 @@ func (c *PostController) CreatePost(ctx context.Context, req *connect.Request[po
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid request"))
 	}
 
-	// TODO-remove user id from arguments
-
 	// get user from context
 	user, err := auth.GetUserFromContext(ctx)
 	if err != nil {
@@ -144,4 +142,40 @@ func (c *PostController) DeletePost(
 	return connect.NewResponse(&postsv1.DeletePostResponse{
 		Success: true,
 	}), nil
+}
+
+func (c *PostController) InitializePostEngagements(
+	ctx context.Context,
+	req *connect.Request[postsv1.InitializePostEngagementsRequest],
+) (*connect.Response[postsv1.InitializePostEngagementsResponse], error) {
+	if req.Msg.PostId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post id is required"))
+	}
+
+	if err := c.postsRepo.InsertEngagementsCount(ctx, req.Msg.PostId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to initialize post engagements"))
+	}
+
+	return connect.NewResponse(&postsv1.InitializePostEngagementsResponse{
+		True: true,
+	}), nil
+
+}
+func (c *PostController) CreatePostIndexedByUser(
+	ctx context.Context,
+	req *connect.Request[postsv1.CreatePostIndexedByUserRequest],
+) (*connect.Response[postsv1.CreatePostIndexedByUserResponse], error) {
+
+	if req.Msg.Post == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid fields"))
+	}
+
+	if err := c.postsRepo.CreatePostIndexedByUser(ctx, req.Msg.Post); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to index post by user"))
+	}
+
+	return connect.NewResponse(&postsv1.CreatePostIndexedByUserResponse{
+		Success: true,
+	}), nil
+
 }
