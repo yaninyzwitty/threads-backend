@@ -38,8 +38,6 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	defer slog.Info("service shutdown complete")
-
 	if err := snowflake.InitSonyFlake(); err != nil {
 		slog.Error("failed to initialize snowflake", "error", err)
 		os.Exit(1)
@@ -96,6 +94,7 @@ func main() {
 			slog.Error("server forced to shutdown", "error", err)
 		} else {
 			slog.Info("server shutdown gracefully")
+
 		}
 		cancel()
 	}()
@@ -108,5 +107,6 @@ func main() {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
 	}
+	slog.Info("service shutdown complete")
 
 }

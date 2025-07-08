@@ -22,9 +22,9 @@ func NewPostRepository(session *gocql.Session) *PostRepository {
 func (r *PostRepository) CreatePost(ctx context.Context, post *postv1.Post) error {
 
 	const (
-		insertPostQuery = `INSERT INTO threads_keyspace.posts (post_id, user_id, content, image_url, created_at) VALUES (?, ?, ?, ?)`
+		insertPostQuery = `INSERT INTO threads_keyspace.posts (post_id, user_id, content, image_url, created_at) VALUES (?, ?, ?, ?, ?)`
 
-		insertOutboxQuery = `INSERT INTO threads_keyspace.outbox (id, event_type, payload, created_at) VALUES (uuid(), ?, ?, false)`
+		insertOutboxQuery = `INSERT INTO threads_keyspace.outbox (event_id, event_type, payload, published) VALUES (uuid(), ?, ?, false) USING TTL 86400`
 
 		eventType = "post.created"
 	)
