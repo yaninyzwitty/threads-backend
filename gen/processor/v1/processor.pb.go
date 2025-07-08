@@ -193,8 +193,8 @@ const file_processor_v1_processor_proto_rawDesc = "" +
 	"\x1cProcessOutboxMessageResponse\x12'\n" +
 	"\x0fprocessed_count\x18\x01 \x01(\x05R\x0eprocessedCount2\x81\x01\n" +
 	"\x10ProcessorService\x12m\n" +
-	"\x14ProcessOutboxMessage\x12).processor.v1.ProcessOutboxMessageRequest\x1a*.processor.v1.ProcessOutboxMessageResponseB\xb2\x01\n" +
-	"\x10com.processor.v1B\x0eProcessorProtoP\x01Z=github.com/bufbuild/buf-examples/gen/processor/v1;processorv1\xa2\x02\x03PXX\xaa\x02\fProcessor.V1\xca\x02\fProcessor\\V1\xe2\x02\x18Processor\\V1\\GPBMetadata\xea\x02\rProcessor::V1b\x06proto3"
+	"\x14ProcessOutboxMessage\x12).processor.v1.ProcessOutboxMessageRequest\x1a*.processor.v1.ProcessOutboxMessageResponseB\xbc\x01\n" +
+	"\x10com.processor.v1B\x0eProcessorProtoP\x01ZGgithub.com/yaninyzwitty/threads-go-backend/gen/processor/v1;processorv1\xa2\x02\x03PXX\xaa\x02\fProcessor.V1\xca\x02\fProcessor\\V1\xe2\x02\x18Processor\\V1\\GPBMetadata\xea\x02\rProcessor::V1b\x06proto3"
 
 var (
 	file_processor_v1_processor_proto_rawDescOnce sync.Once

@@ -7,17 +7,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
-	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
 	"github.com/yaninyzwitty/threads-go-backend/gen/user/v1/userv1connect"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/controller"
+	"github.com/yaninyzwitty/threads-go-backend/services/user-service/kafka"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
@@ -26,8 +25,6 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"golang.org/x/sync/errgroup"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func main() {
@@ -115,112 +112,8 @@ func main() {
 		cancel()
 	}()
 
-	// Kafka event handler
-	go func() {
-		eventHandlers := map[string]func([]byte) error{
-			"user.followed": func(b []byte) error {
-				var event userv1.OutboxEvent
-				if err := protojson.Unmarshal(b, &event); err != nil {
-					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
-				}
-
-				var followedEvent userv1.FollowedEvent
-				if err := protojson.Unmarshal([]byte(event.Payload), &followedEvent); err != nil {
-					return fmt.Errorf("failed to unmarshal FollowedEvent payload: %w", err)
-				}
-
-				eg, egCtx := errgroup.WithContext(ctx)
-
-				eg.Go(func() error {
-					_, err := userController.IncrementFollowingAndFollowerCount(egCtx,
-						connect.NewRequest(&userv1.IncrementFollowingAndFollowerCountRequest{
-							FollowedEvent: &followedEvent,
-						}))
-					return err
-				})
-
-				eg.Go(func() error {
-					_, err := userController.FollowUserCached(egCtx,
-						connect.NewRequest(&userv1.FollowUserCachedRequest{
-							UserId:      followedEvent.UserId,
-							FollowingId: followedEvent.FollowingId,
-						}))
-					return err
-				})
-
-				if err := eg.Wait(); err != nil {
-					slog.Error("follow event handling failed", "err", err)
-					return err
-				}
-				return nil
-			},
-
-			"user.unfollowed": func(b []byte) error {
-				var event userv1.OutboxEvent
-				if err := protojson.Unmarshal(b, &event); err != nil {
-					return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
-				}
-
-				var unfollowedEvent userv1.UnfollowedEvent
-				if err := protojson.Unmarshal([]byte(event.Payload), &unfollowedEvent); err != nil {
-					return fmt.Errorf("failed to unmarshal UnfollowedEvent payload: %w", err)
-				}
-
-				eg, egCtx := errgroup.WithContext(ctx)
-				eg.Go(func() error {
-					_, err := userController.DecrementFollowingAndFollowerCount(egCtx,
-						connect.NewRequest(&userv1.DecrementFollowingAndFollowerCountRequest{
-							UnfollowedEvent: &unfollowedEvent,
-						}))
-					return err
-				})
-
-				eg.Go(func() error {
-					_, err := userController.UnfollowUserCached(egCtx,
-						connect.NewRequest(&userv1.UnfollowUserCachedRequest{
-							UserId:      unfollowedEvent.UserId,
-							FollowingId: unfollowedEvent.FollowingId,
-						}))
-					return err
-				})
-
-				if err := eg.Wait(); err != nil {
-					slog.Error("unfollow event handling failed", "err", err)
-					return err
-				}
-				return nil
-			},
-		}
-
-		for {
-			msg, err := kafkaReader.ReadMessage(ctx)
-			if ctx.Err() != nil {
-				slog.Info("Receive interrupted, shutting down message loop...")
-				return
-			}
-			if err != nil {
-				slog.Error("failed to read Kafka message", "error", err)
-				continue
-			}
-
-			parts := strings.Split(string(msg.Key), ":")
-			if len(parts) != 2 {
-				slog.Warn("invalid Kafka message key format", "key", string(msg.Key))
-				continue
-			}
-
-			eventKey := parts[0]
-			handler, ok := eventHandlers[eventKey]
-			if !ok {
-				slog.Warn("no handler found for event key", "key", eventKey)
-				continue
-			}
-
-			if err := handler(msg.Value); err != nil {
-				slog.Error("event handler failed", "key", eventKey, "error", err)
-			}
-		}
-	}()
+	// Start Kafka consumer
+	kafka.StartKafkaConsumer(ctx, kafkaReader, userController)
 
 	slog.Info("starting ConnectRPC server", "address", server.Addr, "pid", os.Getpid())
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

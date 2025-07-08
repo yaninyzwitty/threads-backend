@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package posts.v1;
+
+
+import "google/protobuf/timestamp.proto";
+
+// Core Post model
+message Post {
+  int64 id = 1;
+  string content = 2;
+  string image_url = 3;
+  int64 user_id = 4; // ID of the user who created the post
+  google.protobuf.Timestamp created_at = 5;
+
+  // Engagement stats
+  int64 like_count = 7;
+  int64 share_count = 8;
+  int64 comment_count = 9;
+  int64 repost_count = 10;
+}
+
+// For transactional outbox or event publishing
+message OutboxEvent {
+  string event_id = 1;
+  string event_type = 2;
+  string payload = 3;
+  bool published = 4;
+}
+
+// Service definition
+service PostService {
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+  rpc GetPost(GetPostRequest) returns (GetPostResponse);
+  rpc ListPostsByUser(ListPostsByUserRequest) returns (ListPostsByUserResponse);
+  rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+}
+
+// Request/Response messages
+
+message CreatePostRequest {
+  string content = 1;
+  string image_url = 2;
+  int64 user_id = 3;
+}
+
+message CreatePostResponse {
+  Post post = 1;
+}
+
+message GetPostRequest {
+  int64 post_id = 1;
+}
+
+message GetPostResponse {
+  Post post = 1;
+}
+
+message ListPostsByUserRequest {
+  int64 user_id = 1;        // Filter by user
+  int32 page_size = 2;      // Number of posts per page
+  bytes paging_state = 3;   // Cassandra paging state (opaque cursor)
+}
+
+message ListPostsByUserResponse {
+  repeated Post posts = 1;
+  bytes paging_state = 2;   // Return for next page query
+}
+
+message DeletePostRequest {
+  int64 post_id = 1;
+}
+
+message DeletePostResponse {
+  bool success = 1;
+}

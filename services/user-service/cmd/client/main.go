@@ -42,7 +42,7 @@ func main() {
 		userServiceUrl,
 	)
 	req := connect.NewRequest(&userv1.FollowUserRequest{
-		FollowingId: 144603817143455350,
+		FollowingId: 145176065684295286,
 	})
 
 	req.Header().Set("Authorization", "Bearer "+os.Getenv("ACCESS_TOKEN"))
@@ -50,10 +50,10 @@ func main() {
 	res, err := userServiceClient.FollowUser(context.Background(), req)
 
 	if err != nil {
-		slog.Error("failed to follow user ", "error", err)
+		slog.Error("failed to login user ", "error", err)
 		os.Exit(1)
 	}
 
-	slog.Info("user followed", "val", res.Msg.Success)
+	slog.Info("user followed", "success", res.Msg.Success)
 
 }

@@ -37,6 +37,48 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *userv1.User) erro
 		Exec()
 }
 
+func (r *UserRepository) CreateUserWithInitialCounts(ctx context.Context, user *userv1.User) error {
+	const (
+		insertUserQuery = `
+			INSERT INTO threads_keyspace.users (
+				id, username, full_name, email, password, profile_pic_url,
+				is_verified, created_at, updated_at
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+		insertOutboxQuery = `
+			INSERT INTO threads_keyspace.outbox (
+				event_id, event_type, payload, published
+			) VALUES (
+				uuid(), ?, ?, false
+			) USING TTL 86400`
+
+		eventType = "user.created"
+	)
+
+	// Marshal the user payload for outbox
+	payload, err := protojson.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("failed to marshal user for outbox: %w", err)
+	}
+
+	// Create a logged batch for atomic execution
+	batch := r.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
+
+	// Insert user
+	batch.Query(insertUserQuery, user.Id, user.Username, user.FullName, user.Email,
+		user.Password, user.ProfilePicUrl, user.IsVerified, user.CreatedAt.AsTime(), user.UpdatedAt.AsTime())
+
+	// Insert outbox event
+	batch.Query(insertOutboxQuery, eventType, payload)
+
+	// Execute the batch
+	if err := r.session.ExecuteBatch(batch); err != nil {
+		return fmt.Errorf("failed to execute user creation batch: %w", err)
+	}
+
+	return nil
+}
+
 func (r *UserRepository) UpdateUser(ctx context.Context, user *userv1.User) error {
 	query := `
 		UPDATE threads_keyspace.users 
@@ -216,24 +258,37 @@ func (r *UserRepository) UnfollowUser(ctx context.Context, followerID, userId in
 	return nil
 }
 
-func (r *UserRepository) IncrementFollowingCount(ctx context.Context, userId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count + 1 WHERE user_id = ?`
-	return r.session.Query(query, userId).WithContext(ctx).Exec()
+func (r *UserRepository) SafeIncrement(ctx context.Context, userID int64, column string) error {
+	queryUpdate := fmt.Sprintf(`
+		UPDATE threads_keyspace.follower_counts 
+		SET %s = %s + 1 
+		WHERE user_id = ?`, column, column)
+
+	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
 }
 
-func (r *UserRepository) IncrementFollowerCount(ctx context.Context, recipientId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count + 1 WHERE user_id = ?`
-	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
-}
+func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column string) error {
+	var current int
 
-func (r *UserRepository) DecrementFollowingCount(ctx context.Context, userId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET following_count = following_count - 1 WHERE user_id = ?`
-	return r.session.Query(query, userId).WithContext(ctx).Exec()
-}
+	querySelect := fmt.Sprintf(`
+		SELECT %s FROM threads_keyspace.follower_counts WHERE user_id = ?`, column)
 
-func (r *UserRepository) DecrementFollowerCount(ctx context.Context, recipientId int64) error {
-	query := `UPDATE threads_keyspace.follower_counts SET follower_count = follower_count - 1 WHERE user_id = ?`
-	return r.session.Query(query, recipientId).WithContext(ctx).Exec()
+	if err := r.session.Query(querySelect, userID).WithContext(ctx).Scan(&current); err != nil {
+		// if row is missing, assume 0 and skip
+		return nil
+	}
+
+	if current <= 0 {
+		// Skip decrement to avoid going negative
+		return nil
+	}
+
+	queryUpdate := fmt.Sprintf(`
+		UPDATE threads_keyspace.follower_counts 
+		SET %s = %s - 1 
+		WHERE user_id = ?`, column, column)
+
+	return r.session.Query(queryUpdate, userID).WithContext(ctx).Exec()
 }
 
 func (r *UserRepository) FollowUserCached(ctx context.Context, userId, followingId int64) error {
@@ -256,4 +311,13 @@ func (r *UserRepository) IsFollowing(ctx context.Context, userId, followingId in
 func (r *UserRepository) UnfollowUserCached(ctx context.Context, userId, followingId int64) error {
 	key := fmt.Sprintf("user:%d:following:%d", userId, followingId)
 	return r.cache.Del(ctx, key).Err()
+}
+
+func (r *UserRepository) InsertFollowerCount(ctx context.Context, userId int64) error {
+	insertFollowerCountsQuery := `
+		UPDATE threads_keyspace.follower_counts 
+		SET follower_count = follower_count + 0, following_count = following_count + 0 
+		WHERE user_id = ?`
+
+	return r.session.Query(insertFollowerCountsQuery, userId).WithContext(ctx).Exec()
 }
