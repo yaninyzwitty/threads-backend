@@ -48,6 +48,9 @@ const (
 	// PostServiceInitializePostEngagementsProcedure is the fully-qualified name of the PostService's
 	// InitializePostEngagements RPC.
 	PostServiceInitializePostEngagementsProcedure = "/posts.v1.PostService/InitializePostEngagements"
+	// PostServiceUpdatePostEngagementsProcedure is the fully-qualified name of the PostService's
+	// UpdatePostEngagements RPC.
+	PostServiceUpdatePostEngagementsProcedure = "/posts.v1.PostService/UpdatePostEngagements"
 )
 
 // PostServiceClient is a client for the posts.v1.PostService service.
@@ -58,6 +61,7 @@ type PostServiceClient interface {
 	DeletePost(context.Context, *connect.Request[v1.DeletePostRequest]) (*connect.Response[v1.DeletePostResponse], error)
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
+	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
 }
 
 // NewPostServiceClient constructs a client for the posts.v1.PostService service. By default, it
@@ -107,6 +111,12 @@ func NewPostServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(postServiceMethods.ByName("InitializePostEngagements")),
 			connect.WithClientOptions(opts...),
 		),
+		updatePostEngagements: connect.NewClient[v1.UpdatePostEngagementsRequest, v1.UpdatePostEngagementsResponse](
+			httpClient,
+			baseURL+PostServiceUpdatePostEngagementsProcedure,
+			connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -118,6 +128,7 @@ type postServiceClient struct {
 	deletePost                *connect.Client[v1.DeletePostRequest, v1.DeletePostResponse]
 	createPostIndexedByUser   *connect.Client[v1.CreatePostIndexedByUserRequest, v1.CreatePostIndexedByUserResponse]
 	initializePostEngagements *connect.Client[v1.InitializePostEngagementsRequest, v1.InitializePostEngagementsResponse]
+	updatePostEngagements     *connect.Client[v1.UpdatePostEngagementsRequest, v1.UpdatePostEngagementsResponse]
 }
 
 // CreatePost calls posts.v1.PostService.CreatePost.
@@ -150,6 +161,11 @@ func (c *postServiceClient) InitializePostEngagements(ctx context.Context, req *
 	return c.initializePostEngagements.CallUnary(ctx, req)
 }
 
+// UpdatePostEngagements calls posts.v1.PostService.UpdatePostEngagements.
+func (c *postServiceClient) UpdatePostEngagements(ctx context.Context, req *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error) {
+	return c.updatePostEngagements.CallUnary(ctx, req)
+}
+
 // PostServiceHandler is an implementation of the posts.v1.PostService service.
 type PostServiceHandler interface {
 	CreatePost(context.Context, *connect.Request[v1.CreatePostRequest]) (*connect.Response[v1.CreatePostResponse], error)
@@ -158,6 +174,7 @@ type PostServiceHandler interface {
 	DeletePost(context.Context, *connect.Request[v1.DeletePostRequest]) (*connect.Response[v1.DeletePostResponse], error)
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
+	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
 }
 
 // NewPostServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -203,6 +220,12 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(postServiceMethods.ByName("InitializePostEngagements")),
 		connect.WithHandlerOptions(opts...),
 	)
+	postServiceUpdatePostEngagementsHandler := connect.NewUnaryHandler(
+		PostServiceUpdatePostEngagementsProcedure,
+		svc.UpdatePostEngagements,
+		connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/posts.v1.PostService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PostServiceCreatePostProcedure:
@@ -217,6 +240,8 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 			postServiceCreatePostIndexedByUserHandler.ServeHTTP(w, r)
 		case PostServiceInitializePostEngagementsProcedure:
 			postServiceInitializePostEngagementsHandler.ServeHTTP(w, r)
+		case PostServiceUpdatePostEngagementsProcedure:
+			postServiceUpdatePostEngagementsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -248,4 +273,8 @@ func (UnimplementedPostServiceHandler) CreatePostIndexedByUser(context.Context, 
 
 func (UnimplementedPostServiceHandler) InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.InitializePostEngagements is not implemented"))
+}
+
+func (UnimplementedPostServiceHandler) UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.UpdatePostEngagements is not implemented"))
 }

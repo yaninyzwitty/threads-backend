@@ -52,6 +52,17 @@ service PostService {
   rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
   rpc CreatePostIndexedByUser(CreatePostIndexedByUserRequest) returns (CreatePostIndexedByUserResponse);
   rpc InitializePostEngagements(InitializePostEngagementsRequest) returns (InitializePostEngagementsResponse);
+  rpc UpdatePostEngagements(UpdatePostEngagementsRequest) returns (UpdatePostEngagementsResponse);
+}
+
+message UpdatePostEngagementsRequest {
+  int64 post_id = 1;
+
+}
+
+message UpdatePostEngagementsResponse {
+  bool success = 1;
+
 }
 
 // Request/Response messages

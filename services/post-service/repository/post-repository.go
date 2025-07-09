@@ -174,3 +174,22 @@ func (r *PostRepository) InsertEngagementsCount(ctx context.Context, postId int6
 	}
 	return nil
 }
+
+func (r *PostRepository) SafeIncrementEngagementCounts(ctx context.Context, postId int64, column string) error {
+	queries := map[string]string{
+		"comment_count": `UPDATE threads_keyspace.post_engagements SET comment_count = comment_count + 1 WHERE post_id = ?`,
+		"like_count":    `UPDATE threads_keyspace.post_engagements SET like_count = like_count + 1 WHERE post_id = ?`,
+		"share_count":   `UPDATE threads_keyspace.post_engagements SET share_count = share_count + 1 WHERE post_id = ?`,
+	}
+
+	query, ok := queries[column]
+	if !ok {
+		return fmt.Errorf("invalid column name: %q", column)
+	}
+
+	if err := r.session.Query(query, postId).WithContext(ctx).Exec(); err != nil {
+		return fmt.Errorf("failed to increment %s for post %d: %w", column, postId, err)
+	}
+
+	return nil
+}
