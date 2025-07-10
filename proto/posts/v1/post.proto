@@ -13,7 +13,7 @@ message Post {
   int64 user_id = 4; // ID of the user who created the post
   google.protobuf.Timestamp created_at = 5;
 
-  // Engagement stats
+  // Engagement stats - 
   int64 like_count = 7;
   int64 share_count = 8;
   int64 comment_count = 9;
