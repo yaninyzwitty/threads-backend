@@ -42,7 +42,7 @@ func main() {
 		userServiceUrl,
 	)
 	req := connect.NewRequest(&userv1.LoginUserRequest{
-		Email:    "nomad.molina@mail.com",
+		Email:    "ane.brun@gmail.com",
 		Password: "12345678",
 	})
 
@@ -55,6 +55,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.Info("user logged in", "token", res.Msg.AccessToken)
+	slog.Info("user logged in", "acess token", res.Msg.AccessToken)
 
 }

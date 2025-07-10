@@ -278,7 +278,6 @@ func (r *UserRepository) SafeIncrement(ctx context.Context, userID int64, column
 	return r.session.
 		Query(query, userID).
 		WithContext(ctx).
-		Consistency(gocql.One).
 		Exec()
 }
 
@@ -325,7 +324,6 @@ func (r *UserRepository) SafeDecrement(ctx context.Context, userID int64, column
 	return r.session.
 		Query(queryUpdate, userID).
 		WithContext(ctx).
-		Consistency(gocql.One).
 		Exec()
 }
 

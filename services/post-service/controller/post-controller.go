@@ -10,6 +10,7 @@ import (
 	"github.com/yaninyzwitty/threads-go-backend/services/post-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -171,11 +172,114 @@ func (c *PostController) CreatePostIndexedByUser(
 	}
 
 	if err := c.postsRepo.CreatePostIndexedByUser(ctx, req.Msg.Post); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to index post by user"))
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to index post by user"))
 	}
 
 	return connect.NewResponse(&postsv1.CreatePostIndexedByUserResponse{
 		Success: true,
 	}), nil
 
+}
+
+// TODO-remove this later
+func (c *PostController) UpdatePostEngagements(ctx context.Context, req *connect.Request[postsv1.UpdatePostEngagementsRequest],
+) (*connect.Response[postsv1.UpdatePostEngagementsResponse], error) {
+	if req.Msg.PostId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid fields"))
+	}
+
+	eg, egCtx := errgroup.WithContext(ctx)
+
+	eg.Go(func() error {
+		if err := c.postsRepo.SafeIncrementEngagementCounts(egCtx, req.Msg.PostId, "comment_count"); err != nil {
+			return err
+		}
+		return nil
+
+	})
+
+	eg.Go(func() error {
+		if err := c.postsRepo.SafeIncrementEngagementCounts(egCtx, req.Msg.PostId, "like_count"); err != nil {
+			return err
+		}
+		return nil
+	})
+	eg.Go(func() error {
+		if err := c.postsRepo.SafeIncrementEngagementCounts(egCtx, req.Msg.PostId, "share_count"); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to increment follow counts: %w", err))
+	}
+	return connect.NewResponse(&postsv1.UpdatePostEngagementsResponse{
+		Success: true,
+	}), nil
+
+}
+
+func (c *PostController) CreateLike(ctx context.Context, req *connect.Request[postsv1.CreateLikeRequest]) (*connect.Response[postsv1.CreateLikeResponse], error) {
+	if req.Msg.PostId == 0 || req.Msg.UserId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid fields"))
+	}
+
+	user, err := auth.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthorized"))
+	}
+
+	if req.Msg.UserId != user.Id {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("ids dont match"))
+
+	}
+
+	like := &postsv1.Like{
+		PostId:    req.Msg.PostId,
+		UserId:    user.Id,
+		CreatedAt: timestamppb.Now(),
+	}
+	if err := c.postsRepo.CreateLike(ctx, like); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create like: %w", err))
+	}
+	return connect.NewResponse(&postsv1.CreateLikeResponse{
+		Like: like,
+	}), nil
+
+}
+
+func (c *PostController) CreateLikeByUser(
+	ctx context.Context,
+	req *connect.Request[postsv1.CreateLikeByUserRequest],
+) (*connect.Response[postsv1.CreateLikeByUserResponse], error) {
+
+	if req.Msg.Like == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("like is required"))
+	}
+
+	if err := c.postsRepo.CreateUserLike(ctx, req.Msg.GetLike()); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create user like: %w", err))
+	}
+
+	return connect.NewResponse(&postsv1.CreateLikeByUserResponse{
+		Created: true,
+	}), nil
+}
+
+func (c *PostController) IncrementPostLikes(
+	ctx context.Context,
+	req *connect.Request[postsv1.IncrementPostLikesRequest],
+) (*connect.Response[postsv1.IncrementPostLikesResponse], error) {
+	if req.Msg.GetPostId() == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
+	}
+
+	if err := c.postsRepo.SafeIncrementEngagementCounts(ctx, req.Msg.GetPostId(), "like_count"); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to increment like count: %w", err))
+	}
+
+	return connect.NewResponse(&postsv1.IncrementPostLikesResponse{
+		Incremented: true,
+	}), nil
 }

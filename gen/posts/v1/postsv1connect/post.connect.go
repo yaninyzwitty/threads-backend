@@ -33,6 +33,14 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// PostServiceCreateLikeProcedure is the fully-qualified name of the PostService's CreateLike RPC.
+	PostServiceCreateLikeProcedure = "/posts.v1.PostService/CreateLike"
+	// PostServiceIncrementPostLikesProcedure is the fully-qualified name of the PostService's
+	// IncrementPostLikes RPC.
+	PostServiceIncrementPostLikesProcedure = "/posts.v1.PostService/IncrementPostLikes"
+	// PostServiceCreateLikeByUserProcedure is the fully-qualified name of the PostService's
+	// CreateLikeByUser RPC.
+	PostServiceCreateLikeByUserProcedure = "/posts.v1.PostService/CreateLikeByUser"
 	// PostServiceCreatePostProcedure is the fully-qualified name of the PostService's CreatePost RPC.
 	PostServiceCreatePostProcedure = "/posts.v1.PostService/CreatePost"
 	// PostServiceGetPostProcedure is the fully-qualified name of the PostService's GetPost RPC.
@@ -48,16 +56,23 @@ const (
 	// PostServiceInitializePostEngagementsProcedure is the fully-qualified name of the PostService's
 	// InitializePostEngagements RPC.
 	PostServiceInitializePostEngagementsProcedure = "/posts.v1.PostService/InitializePostEngagements"
+	// PostServiceUpdatePostEngagementsProcedure is the fully-qualified name of the PostService's
+	// UpdatePostEngagements RPC.
+	PostServiceUpdatePostEngagementsProcedure = "/posts.v1.PostService/UpdatePostEngagements"
 )
 
 // PostServiceClient is a client for the posts.v1.PostService service.
 type PostServiceClient interface {
+	CreateLike(context.Context, *connect.Request[v1.CreateLikeRequest]) (*connect.Response[v1.CreateLikeResponse], error)
+	IncrementPostLikes(context.Context, *connect.Request[v1.IncrementPostLikesRequest]) (*connect.Response[v1.IncrementPostLikesResponse], error)
+	CreateLikeByUser(context.Context, *connect.Request[v1.CreateLikeByUserRequest]) (*connect.Response[v1.CreateLikeByUserResponse], error)
 	CreatePost(context.Context, *connect.Request[v1.CreatePostRequest]) (*connect.Response[v1.CreatePostResponse], error)
 	GetPost(context.Context, *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostResponse], error)
 	ListPostsByUser(context.Context, *connect.Request[v1.ListPostsByUserRequest]) (*connect.Response[v1.ListPostsByUserResponse], error)
 	DeletePost(context.Context, *connect.Request[v1.DeletePostRequest]) (*connect.Response[v1.DeletePostResponse], error)
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
+	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
 }
 
 // NewPostServiceClient constructs a client for the posts.v1.PostService service. By default, it
@@ -71,6 +86,24 @@ func NewPostServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 	baseURL = strings.TrimRight(baseURL, "/")
 	postServiceMethods := v1.File_posts_v1_post_proto.Services().ByName("PostService").Methods()
 	return &postServiceClient{
+		createLike: connect.NewClient[v1.CreateLikeRequest, v1.CreateLikeResponse](
+			httpClient,
+			baseURL+PostServiceCreateLikeProcedure,
+			connect.WithSchema(postServiceMethods.ByName("CreateLike")),
+			connect.WithClientOptions(opts...),
+		),
+		incrementPostLikes: connect.NewClient[v1.IncrementPostLikesRequest, v1.IncrementPostLikesResponse](
+			httpClient,
+			baseURL+PostServiceIncrementPostLikesProcedure,
+			connect.WithSchema(postServiceMethods.ByName("IncrementPostLikes")),
+			connect.WithClientOptions(opts...),
+		),
+		createLikeByUser: connect.NewClient[v1.CreateLikeByUserRequest, v1.CreateLikeByUserResponse](
+			httpClient,
+			baseURL+PostServiceCreateLikeByUserProcedure,
+			connect.WithSchema(postServiceMethods.ByName("CreateLikeByUser")),
+			connect.WithClientOptions(opts...),
+		),
 		createPost: connect.NewClient[v1.CreatePostRequest, v1.CreatePostResponse](
 			httpClient,
 			baseURL+PostServiceCreatePostProcedure,
@@ -107,17 +140,42 @@ func NewPostServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(postServiceMethods.ByName("InitializePostEngagements")),
 			connect.WithClientOptions(opts...),
 		),
+		updatePostEngagements: connect.NewClient[v1.UpdatePostEngagementsRequest, v1.UpdatePostEngagementsResponse](
+			httpClient,
+			baseURL+PostServiceUpdatePostEngagementsProcedure,
+			connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // postServiceClient implements PostServiceClient.
 type postServiceClient struct {
+	createLike                *connect.Client[v1.CreateLikeRequest, v1.CreateLikeResponse]
+	incrementPostLikes        *connect.Client[v1.IncrementPostLikesRequest, v1.IncrementPostLikesResponse]
+	createLikeByUser          *connect.Client[v1.CreateLikeByUserRequest, v1.CreateLikeByUserResponse]
 	createPost                *connect.Client[v1.CreatePostRequest, v1.CreatePostResponse]
 	getPost                   *connect.Client[v1.GetPostRequest, v1.GetPostResponse]
 	listPostsByUser           *connect.Client[v1.ListPostsByUserRequest, v1.ListPostsByUserResponse]
 	deletePost                *connect.Client[v1.DeletePostRequest, v1.DeletePostResponse]
 	createPostIndexedByUser   *connect.Client[v1.CreatePostIndexedByUserRequest, v1.CreatePostIndexedByUserResponse]
 	initializePostEngagements *connect.Client[v1.InitializePostEngagementsRequest, v1.InitializePostEngagementsResponse]
+	updatePostEngagements     *connect.Client[v1.UpdatePostEngagementsRequest, v1.UpdatePostEngagementsResponse]
+}
+
+// CreateLike calls posts.v1.PostService.CreateLike.
+func (c *postServiceClient) CreateLike(ctx context.Context, req *connect.Request[v1.CreateLikeRequest]) (*connect.Response[v1.CreateLikeResponse], error) {
+	return c.createLike.CallUnary(ctx, req)
+}
+
+// IncrementPostLikes calls posts.v1.PostService.IncrementPostLikes.
+func (c *postServiceClient) IncrementPostLikes(ctx context.Context, req *connect.Request[v1.IncrementPostLikesRequest]) (*connect.Response[v1.IncrementPostLikesResponse], error) {
+	return c.incrementPostLikes.CallUnary(ctx, req)
+}
+
+// CreateLikeByUser calls posts.v1.PostService.CreateLikeByUser.
+func (c *postServiceClient) CreateLikeByUser(ctx context.Context, req *connect.Request[v1.CreateLikeByUserRequest]) (*connect.Response[v1.CreateLikeByUserResponse], error) {
+	return c.createLikeByUser.CallUnary(ctx, req)
 }
 
 // CreatePost calls posts.v1.PostService.CreatePost.
@@ -150,14 +208,23 @@ func (c *postServiceClient) InitializePostEngagements(ctx context.Context, req *
 	return c.initializePostEngagements.CallUnary(ctx, req)
 }
 
+// UpdatePostEngagements calls posts.v1.PostService.UpdatePostEngagements.
+func (c *postServiceClient) UpdatePostEngagements(ctx context.Context, req *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error) {
+	return c.updatePostEngagements.CallUnary(ctx, req)
+}
+
 // PostServiceHandler is an implementation of the posts.v1.PostService service.
 type PostServiceHandler interface {
+	CreateLike(context.Context, *connect.Request[v1.CreateLikeRequest]) (*connect.Response[v1.CreateLikeResponse], error)
+	IncrementPostLikes(context.Context, *connect.Request[v1.IncrementPostLikesRequest]) (*connect.Response[v1.IncrementPostLikesResponse], error)
+	CreateLikeByUser(context.Context, *connect.Request[v1.CreateLikeByUserRequest]) (*connect.Response[v1.CreateLikeByUserResponse], error)
 	CreatePost(context.Context, *connect.Request[v1.CreatePostRequest]) (*connect.Response[v1.CreatePostResponse], error)
 	GetPost(context.Context, *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostResponse], error)
 	ListPostsByUser(context.Context, *connect.Request[v1.ListPostsByUserRequest]) (*connect.Response[v1.ListPostsByUserResponse], error)
 	DeletePost(context.Context, *connect.Request[v1.DeletePostRequest]) (*connect.Response[v1.DeletePostResponse], error)
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
+	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
 }
 
 // NewPostServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -167,6 +234,24 @@ type PostServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	postServiceMethods := v1.File_posts_v1_post_proto.Services().ByName("PostService").Methods()
+	postServiceCreateLikeHandler := connect.NewUnaryHandler(
+		PostServiceCreateLikeProcedure,
+		svc.CreateLike,
+		connect.WithSchema(postServiceMethods.ByName("CreateLike")),
+		connect.WithHandlerOptions(opts...),
+	)
+	postServiceIncrementPostLikesHandler := connect.NewUnaryHandler(
+		PostServiceIncrementPostLikesProcedure,
+		svc.IncrementPostLikes,
+		connect.WithSchema(postServiceMethods.ByName("IncrementPostLikes")),
+		connect.WithHandlerOptions(opts...),
+	)
+	postServiceCreateLikeByUserHandler := connect.NewUnaryHandler(
+		PostServiceCreateLikeByUserProcedure,
+		svc.CreateLikeByUser,
+		connect.WithSchema(postServiceMethods.ByName("CreateLikeByUser")),
+		connect.WithHandlerOptions(opts...),
+	)
 	postServiceCreatePostHandler := connect.NewUnaryHandler(
 		PostServiceCreatePostProcedure,
 		svc.CreatePost,
@@ -203,8 +288,20 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(postServiceMethods.ByName("InitializePostEngagements")),
 		connect.WithHandlerOptions(opts...),
 	)
+	postServiceUpdatePostEngagementsHandler := connect.NewUnaryHandler(
+		PostServiceUpdatePostEngagementsProcedure,
+		svc.UpdatePostEngagements,
+		connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/posts.v1.PostService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case PostServiceCreateLikeProcedure:
+			postServiceCreateLikeHandler.ServeHTTP(w, r)
+		case PostServiceIncrementPostLikesProcedure:
+			postServiceIncrementPostLikesHandler.ServeHTTP(w, r)
+		case PostServiceCreateLikeByUserProcedure:
+			postServiceCreateLikeByUserHandler.ServeHTTP(w, r)
 		case PostServiceCreatePostProcedure:
 			postServiceCreatePostHandler.ServeHTTP(w, r)
 		case PostServiceGetPostProcedure:
@@ -217,6 +314,8 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 			postServiceCreatePostIndexedByUserHandler.ServeHTTP(w, r)
 		case PostServiceInitializePostEngagementsProcedure:
 			postServiceInitializePostEngagementsHandler.ServeHTTP(w, r)
+		case PostServiceUpdatePostEngagementsProcedure:
+			postServiceUpdatePostEngagementsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -225,6 +324,18 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 
 // UnimplementedPostServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedPostServiceHandler struct{}
+
+func (UnimplementedPostServiceHandler) CreateLike(context.Context, *connect.Request[v1.CreateLikeRequest]) (*connect.Response[v1.CreateLikeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.CreateLike is not implemented"))
+}
+
+func (UnimplementedPostServiceHandler) IncrementPostLikes(context.Context, *connect.Request[v1.IncrementPostLikesRequest]) (*connect.Response[v1.IncrementPostLikesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.IncrementPostLikes is not implemented"))
+}
+
+func (UnimplementedPostServiceHandler) CreateLikeByUser(context.Context, *connect.Request[v1.CreateLikeByUserRequest]) (*connect.Response[v1.CreateLikeByUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.CreateLikeByUser is not implemented"))
+}
 
 func (UnimplementedPostServiceHandler) CreatePost(context.Context, *connect.Request[v1.CreatePostRequest]) (*connect.Response[v1.CreatePostResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.CreatePost is not implemented"))
@@ -248,4 +359,8 @@ func (UnimplementedPostServiceHandler) CreatePostIndexedByUser(context.Context, 
 
 func (UnimplementedPostServiceHandler) InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.InitializePostEngagements is not implemented"))
+}
+
+func (UnimplementedPostServiceHandler) UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.UpdatePostEngagements is not implemented"))
 }
