@@ -101,3 +101,18 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.post_engagements (
   share_count COUNTER,
   PRIMARY KEY (post_id)
 );
+
+CREATE TABLE IF NOT EXISTS threads_keyspace.likes_by_post (
+  post_id   BIGINT,
+  user_id   BIGINT,
+  liked_at  TIMESTAMP,
+  PRIMARY KEY ((post_id), user_id)
+) WITH CLUSTERING ORDER BY (user_id ASC);
+
+
+CREATE TABLE IF NOT EXISTS threads_keyspace.likes_by_user (
+  user_id   BIGINT,
+  post_id   BIGINT,
+  liked_at  TIMESTAMP,
+  PRIMARY KEY ((user_id), post_id)
+) WITH CLUSTERING ORDER BY (post_id ASC);

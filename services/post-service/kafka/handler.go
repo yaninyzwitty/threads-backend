@@ -18,6 +18,7 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, postCont
 	slog.Info("starting kafka consumer...")
 	eventHandlers := map[string]func([]byte) error{
 		"post.created": func(b []byte) error {
+			slog.Info("handling post.created event...")
 			var event postsv1.OutboxEvent
 			if err := protojson.Unmarshal(b, &event); err != nil {
 				return fmt.Errorf("failed to unmarshal OutboxEvent JSON: %w", err)
@@ -31,6 +32,8 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, postCont
 			eg, egCtx := errgroup.WithContext(ctx)
 
 			eg.Go(func() error {
+
+				slog.Info("creating post indexed by user...", "post_id", postCreatedEvent.Id)
 				_, err := postController.CreatePostIndexedByUser(egCtx,
 					connect.NewRequest(&postsv1.CreatePostIndexedByUserRequest{
 						Post: &postCreatedEvent,
@@ -39,6 +42,8 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, postCont
 			})
 
 			eg.Go(func() error {
+				slog.Info("initializing post engagements...", "post_id", postCreatedEvent.Id)
+
 				_, err := postController.InitializePostEngagements(egCtx, connect.NewRequest(&postsv1.InitializePostEngagementsRequest{
 					PostId: postCreatedEvent.Id,
 				}))
@@ -46,6 +51,39 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, postCont
 			})
 			return eg.Wait()
 
+		},
+		"like.created": func(b []byte) error {
+			slog.Info("handling like.created event...")
+
+			var event postsv1.OutboxEvent
+			if err := protojson.Unmarshal(b, &event); err != nil {
+				return fmt.Errorf("failed to unmarshal OutboxEvent: %w", err)
+			}
+
+			var like postsv1.Like
+			if err := protojson.Unmarshal([]byte(event.Payload), &like); err != nil {
+				return fmt.Errorf("failed to unmarshal Like payload: %w", err)
+			}
+
+			eg, egCtx := errgroup.WithContext(ctx)
+
+			eg.Go(func() error {
+				slog.Info("inserting user like...")
+				_, err := postController.CreateLikeByUser(egCtx, connect.NewRequest(&postsv1.CreateLikeByUserRequest{
+					Like: &like,
+				}))
+				return err
+			})
+
+			eg.Go(func() error {
+				slog.Info("incrementing post likes...")
+				_, err := postController.IncrementPostLikes(egCtx, connect.NewRequest(&postsv1.IncrementPostLikesRequest{
+					PostId: like.PostId,
+				}))
+				return err
+			})
+
+			return eg.Wait()
 		},
 	}
 

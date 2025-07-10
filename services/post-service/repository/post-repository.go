@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -174,6 +175,61 @@ func (r *PostRepository) InsertEngagementsCount(ctx context.Context, postId int6
 	}
 	return nil
 }
+func (r *PostRepository) CreateUserLike(ctx context.Context, like *postv1.Like) error {
+	const likeQuery = `
+		INSERT INTO threads_keyspace.likes_by_user
+		(post_id, user_id, liked_at) 
+		VALUES (?, ?, ?)`
+
+	if err := r.session.Query(likeQuery,
+		like.PostId,
+		like.UserId,
+		like.CreatedAt.AsTime(),
+	).WithContext(ctx).Exec(); err != nil {
+		return fmt.Errorf("failed to insert like into likes_by_user: %w", err)
+	}
+
+	return nil
+}
+
+func (r *PostRepository) CreateLike(ctx context.Context, like *postv1.Like) error {
+	const (
+		likeQuery = `
+			INSERT INTO threads_keyspace.likes_by_post 
+			(post_id, user_id, liked_at) 
+			VALUES (?, ?, ?)`
+
+		insertOutboxQuery = `
+			INSERT INTO threads_keyspace.outbox 
+			(event_id, event_type, payload, published) 
+			VALUES (uuid(), ?, ?, false) 
+			USING TTL 86400`
+
+		eventType = "like.created"
+	)
+
+	// Marshal the like payload for outbox
+	payload, err := protojson.Marshal(like)
+	if err != nil {
+		return fmt.Errorf("failed to marshal like for outbox: %w", err)
+	}
+
+	// Create a logged batch for atomic execution
+	batch := r.session.NewBatch(gocql.LoggedBatch).WithContext(ctx)
+
+	// Insert into likes_by_post
+	batch.Query(likeQuery, like.PostId, like.UserId, like.CreatedAt.AsTime())
+
+	// Insert into outbox
+	batch.Query(insertOutboxQuery, eventType, payload)
+
+	// Execute the batch
+	if err := r.session.ExecuteBatch(batch); err != nil {
+		return fmt.Errorf("failed to execute like creation batch: %w", err)
+	}
+
+	return nil
+}
 
 func (r *PostRepository) SafeIncrementEngagementCounts(ctx context.Context, postId int64, column string) error {
 	queries := map[string]string{
@@ -187,9 +243,12 @@ func (r *PostRepository) SafeIncrementEngagementCounts(ctx context.Context, post
 		return fmt.Errorf("invalid column name: %q", column)
 	}
 
+	slog.Debug("incrementing counter", "post_id", postId, "column", column)
+
 	if err := r.session.Query(query, postId).WithContext(ctx).Exec(); err != nil {
 		return fmt.Errorf("failed to increment %s for post %d: %w", column, postId, err)
 	}
 
+	slog.Debug("successfully incremented counter", "post_id", postId, "column", column)
 	return nil
 }

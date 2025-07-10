@@ -219,3 +219,67 @@ func (c *PostController) UpdatePostEngagements(ctx context.Context, req *connect
 	}), nil
 
 }
+
+func (c *PostController) CreateLike(ctx context.Context, req *connect.Request[postsv1.CreateLikeRequest]) (*connect.Response[postsv1.CreateLikeResponse], error) {
+	if req.Msg.PostId == 0 || req.Msg.UserId == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid fields"))
+	}
+
+	user, err := auth.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("unauthorized"))
+	}
+
+	if req.Msg.UserId != user.Id {
+		return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("ids dont match"))
+
+	}
+
+	like := &postsv1.Like{
+		PostId:    req.Msg.PostId,
+		UserId:    user.Id,
+		CreatedAt: timestamppb.Now(),
+	}
+	if err := c.postsRepo.CreateLike(ctx, like); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create like: %w", err))
+	}
+	return connect.NewResponse(&postsv1.CreateLikeResponse{
+		Like: like,
+	}), nil
+
+}
+
+func (c *PostController) CreateLikeByUser(
+	ctx context.Context,
+	req *connect.Request[postsv1.CreateLikeByUserRequest],
+) (*connect.Response[postsv1.CreateLikeByUserResponse], error) {
+
+	if req.Msg.Like == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("like is required"))
+	}
+
+	if err := c.postsRepo.CreateUserLike(ctx, req.Msg.GetLike()); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to create user like: %w", err))
+	}
+
+	return connect.NewResponse(&postsv1.CreateLikeByUserResponse{
+		Created: true,
+	}), nil
+}
+
+func (c *PostController) IncrementPostLikes(
+	ctx context.Context,
+	req *connect.Request[postsv1.IncrementPostLikesRequest],
+) (*connect.Response[postsv1.IncrementPostLikesResponse], error) {
+	if req.Msg.GetPostId() == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
+	}
+
+	if err := c.postsRepo.SafeIncrementEngagementCounts(ctx, req.Msg.GetPostId(), "like_count"); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to increment like count: %w", err))
+	}
+
+	return connect.NewResponse(&postsv1.IncrementPostLikesResponse{
+		Incremented: true,
+	}), nil
+}

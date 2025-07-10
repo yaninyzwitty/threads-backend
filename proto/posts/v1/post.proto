@@ -44,8 +44,44 @@ message InitializePostEngagementsRequest {
 message InitializePostEngagementsResponse {
   bool true = 1;
 }
+
+
+message Like {
+  int64 post_id = 1;
+  int64 user_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+
+}
+message CreateLikeRequest {
+  int64 post_id = 1;
+  int64 user_id = 2;
+
+}
+message CreateLikeResponse {
+  Like like = 1;
+}
+
+message CreateLikeByUserRequest {
+  Like like = 1;
+
+}
+
+message CreateLikeByUserResponse {
+  bool created = 1;
+}
+
+message IncrementPostLikesRequest {
+  int64 post_id = 1;
+}
+
+message IncrementPostLikesResponse {
+  bool incremented = 1;
+}
 // Service definition
 service PostService {
+  rpc CreateLike(CreateLikeRequest) returns (CreateLikeResponse);
+  rpc IncrementPostLikes(IncrementPostLikesRequest) returns (IncrementPostLikesResponse);
+  rpc CreateLikeByUser(CreateLikeByUserRequest) returns (CreateLikeByUserResponse);
   rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
   rpc GetPost(GetPostRequest) returns (GetPostResponse);
   rpc ListPostsByUser(ListPostsByUserRequest) returns (ListPostsByUserResponse);
