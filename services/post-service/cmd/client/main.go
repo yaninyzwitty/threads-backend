@@ -39,8 +39,8 @@ func main() {
 	)
 
 	req := connect.NewRequest(&postsv1.CreateLikeRequest{
-		PostId: 145459954180968054,
-		UserId: 145453907521326710,
+		PostId: 145604212619759222,
+		UserId: 145452450504003190,
 	})
 
 	req.Header().Set("Authorization", "Bearer "+os.Getenv("ACCESS_TOKEN"))

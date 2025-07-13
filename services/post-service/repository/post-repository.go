@@ -8,6 +8,7 @@ import (
 
 	"github.com/gocql/gocql"
 	postv1 "github.com/yaninyzwitty/threads-go-backend/gen/posts/v1"
+	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -42,7 +43,7 @@ func (r *PostRepository) CreatePost(ctx context.Context, post *postv1.Post) erro
 
 	// insert post
 
-	batch.Query(insertPostQuery, post.Id, post.UserId, post.Content, post.ImageUrl, post.CreatedAt.AsTime())
+	batch.Query(insertPostQuery, post.Id, post.User.Id, post.Content, post.ImageUrl, post.CreatedAt.AsTime())
 
 	// insert outbox event
 	batch.Query(insertOutboxQuery, eventType, payload)
@@ -72,7 +73,7 @@ func (r *PostRepository) GetPost(ctx context.Context, postId int64) (*postv1.Pos
 		Query(query, postId).
 		WithContext(ctx).
 		Consistency(gocql.One).
-		Scan(&post.Id, &post.UserId, &post.Content, &post.ImageUrl, &createdAt)
+		Scan(&post.Id, &post.User.Id, &post.Content, &post.ImageUrl, &createdAt)
 
 	if err != nil {
 		if err == gocql.ErrNotFound {
@@ -123,8 +124,10 @@ func (r *PostRepository) ListPostsByUser(
 
 	for iter.Scan(&postID, &uid, &content, &imageURL, &createdAt) {
 		post := &postv1.Post{
-			Id:        postID,
-			UserId:    uid,
+			Id: postID,
+			User: &userv1.User{
+				Id: uid,
+			},
 			Content:   content,
 			ImageUrl:  imageURL,
 			CreatedAt: timestamppb.New(createdAt),
@@ -150,14 +153,14 @@ func (r *PostRepository) CreatePostIndexedByUser(ctx context.Context, post *post
 
 	err := r.session.Query(query,
 		post.Id,
-		post.UserId,
+		post.User.Id,
 		post.Content,
 		post.ImageUrl,
 		post.CreatedAt.AsTime(), // assuming created_at is a google.protobuf.Timestamp
 	).WithContext(ctx).Exec()
 
 	if err != nil {
-		return fmt.Errorf("failed to create post for user %d: %w", post.UserId, err)
+		return fmt.Errorf("failed to create post for user %d: %w", post.User.Id, err)
 	}
 	return nil
 }
@@ -175,6 +178,36 @@ func (r *PostRepository) InsertEngagementsCount(ctx context.Context, postId int6
 	}
 	return nil
 }
+
+func (r *PostRepository) SelectEngagementCounts(ctx context.Context, postId int64) (*postv1.PostEngagements, error) {
+	query := `
+		SELECT like_count, share_count, comment_count, repost_count
+		FROM threads_keyspace.post_engagements
+		WHERE post_id = ? LIMIT 1
+	`
+
+	var postEngagement postv1.PostEngagements
+
+	if err := r.session.Query(query, postId).WithContext(ctx).Scan(
+		&postEngagement.LikeCount,
+		&postEngagement.ShareCount,
+		&postEngagement.CommentCount,
+		&postEngagement.RepostCount,
+	); err != nil {
+		if err == gocql.ErrNotFound {
+			return &postv1.PostEngagements{
+				LikeCount:    0,
+				ShareCount:   0,
+				CommentCount: 0,
+				RepostCount:  0,
+			}, nil
+		}
+		return nil, fmt.Errorf("failed to select engagement counts for post %d: %w", postId, err)
+	}
+
+	return &postEngagement, nil
+}
+
 func (r *PostRepository) CreateUserLike(ctx context.Context, like *postv1.Like) error {
 	const likeQuery = `
 		INSERT INTO threads_keyspace.likes_by_user

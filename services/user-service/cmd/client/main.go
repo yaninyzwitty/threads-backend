@@ -42,7 +42,7 @@ func main() {
 		userServiceUrl,
 	)
 	req := connect.NewRequest(&userv1.LoginUserRequest{
-		Email:    "ane.brun@gmail.com",
+		Email:    "lenaasher@mail.com",
 		Password: "12345678",
 	})
 

@@ -59,6 +59,9 @@ const (
 	// PostServiceUpdatePostEngagementsProcedure is the fully-qualified name of the PostService's
 	// UpdatePostEngagements RPC.
 	PostServiceUpdatePostEngagementsProcedure = "/posts.v1.PostService/UpdatePostEngagements"
+	// PostServiceGetPostWithMetadataProcedure is the fully-qualified name of the PostService's
+	// GetPostWithMetadata RPC.
+	PostServiceGetPostWithMetadataProcedure = "/posts.v1.PostService/GetPostWithMetadata"
 )
 
 // PostServiceClient is a client for the posts.v1.PostService service.
@@ -73,6 +76,7 @@ type PostServiceClient interface {
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
 	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
+	GetPostWithMetadata(context.Context, *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostWithMetadataResponse], error)
 }
 
 // NewPostServiceClient constructs a client for the posts.v1.PostService service. By default, it
@@ -146,6 +150,12 @@ func NewPostServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
 			connect.WithClientOptions(opts...),
 		),
+		getPostWithMetadata: connect.NewClient[v1.GetPostRequest, v1.GetPostWithMetadataResponse](
+			httpClient,
+			baseURL+PostServiceGetPostWithMetadataProcedure,
+			connect.WithSchema(postServiceMethods.ByName("GetPostWithMetadata")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -161,6 +171,7 @@ type postServiceClient struct {
 	createPostIndexedByUser   *connect.Client[v1.CreatePostIndexedByUserRequest, v1.CreatePostIndexedByUserResponse]
 	initializePostEngagements *connect.Client[v1.InitializePostEngagementsRequest, v1.InitializePostEngagementsResponse]
 	updatePostEngagements     *connect.Client[v1.UpdatePostEngagementsRequest, v1.UpdatePostEngagementsResponse]
+	getPostWithMetadata       *connect.Client[v1.GetPostRequest, v1.GetPostWithMetadataResponse]
 }
 
 // CreateLike calls posts.v1.PostService.CreateLike.
@@ -213,6 +224,11 @@ func (c *postServiceClient) UpdatePostEngagements(ctx context.Context, req *conn
 	return c.updatePostEngagements.CallUnary(ctx, req)
 }
 
+// GetPostWithMetadata calls posts.v1.PostService.GetPostWithMetadata.
+func (c *postServiceClient) GetPostWithMetadata(ctx context.Context, req *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostWithMetadataResponse], error) {
+	return c.getPostWithMetadata.CallUnary(ctx, req)
+}
+
 // PostServiceHandler is an implementation of the posts.v1.PostService service.
 type PostServiceHandler interface {
 	CreateLike(context.Context, *connect.Request[v1.CreateLikeRequest]) (*connect.Response[v1.CreateLikeResponse], error)
@@ -225,6 +241,7 @@ type PostServiceHandler interface {
 	CreatePostIndexedByUser(context.Context, *connect.Request[v1.CreatePostIndexedByUserRequest]) (*connect.Response[v1.CreatePostIndexedByUserResponse], error)
 	InitializePostEngagements(context.Context, *connect.Request[v1.InitializePostEngagementsRequest]) (*connect.Response[v1.InitializePostEngagementsResponse], error)
 	UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error)
+	GetPostWithMetadata(context.Context, *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostWithMetadataResponse], error)
 }
 
 // NewPostServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -294,6 +311,12 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(postServiceMethods.ByName("UpdatePostEngagements")),
 		connect.WithHandlerOptions(opts...),
 	)
+	postServiceGetPostWithMetadataHandler := connect.NewUnaryHandler(
+		PostServiceGetPostWithMetadataProcedure,
+		svc.GetPostWithMetadata,
+		connect.WithSchema(postServiceMethods.ByName("GetPostWithMetadata")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/posts.v1.PostService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PostServiceCreateLikeProcedure:
@@ -316,6 +339,8 @@ func NewPostServiceHandler(svc PostServiceHandler, opts ...connect.HandlerOption
 			postServiceInitializePostEngagementsHandler.ServeHTTP(w, r)
 		case PostServiceUpdatePostEngagementsProcedure:
 			postServiceUpdatePostEngagementsHandler.ServeHTTP(w, r)
+		case PostServiceGetPostWithMetadataProcedure:
+			postServiceGetPostWithMetadataHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -363,4 +388,8 @@ func (UnimplementedPostServiceHandler) InitializePostEngagements(context.Context
 
 func (UnimplementedPostServiceHandler) UpdatePostEngagements(context.Context, *connect.Request[v1.UpdatePostEngagementsRequest]) (*connect.Response[v1.UpdatePostEngagementsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.UpdatePostEngagements is not implemented"))
+}
+
+func (UnimplementedPostServiceHandler) GetPostWithMetadata(context.Context, *connect.Request[v1.GetPostRequest]) (*connect.Response[v1.GetPostWithMetadataResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("posts.v1.PostService.GetPostWithMetadata is not implemented"))
 }

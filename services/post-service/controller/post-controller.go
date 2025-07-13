@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	postsv1 "github.com/yaninyzwitty/threads-go-backend/gen/posts/v1"
+	userv1 "github.com/yaninyzwitty/threads-go-backend/gen/user/v1"
 	"github.com/yaninyzwitty/threads-go-backend/services/post-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/shared/snowflake"
@@ -45,15 +46,13 @@ func (c *PostController) CreatePost(ctx context.Context, req *connect.Request[po
 	}
 
 	post := &postsv1.Post{
-		Id:           int64(postId),
-		Content:      req.Msg.GetContent(),
-		ImageUrl:     req.Msg.GetImageUrl(),
-		UserId:       user.Id,
-		CreatedAt:    timestamppb.Now(),
-		LikeCount:    0,
-		ShareCount:   0,
-		CommentCount: 0,
-		RepostCount:  0,
+		Id:       int64(postId),
+		Content:  req.Msg.GetContent(),
+		ImageUrl: req.Msg.GetImageUrl(),
+		User: &userv1.User{
+			Id: req.Msg.UserId,
+		},
+		CreatedAt: timestamppb.Now(),
 	}
 
 	if err := c.postsRepo.CreatePost(ctx, post); err != nil {
@@ -131,7 +130,7 @@ func (c *PostController) DeletePost(
 	}
 
 	// Authorization: only the creator can delete
-	if post.UserId != user.Id {
+	if post.User.Id != user.Id {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
 	}
 
@@ -282,4 +281,34 @@ func (c *PostController) IncrementPostLikes(
 	return connect.NewResponse(&postsv1.IncrementPostLikesResponse{
 		Incremented: true,
 	}), nil
+}
+
+func (c *PostController) GetPostWithMetadata(ctx context.Context, req *connect.Request[postsv1.GetPostRequest]) (*connect.Response[postsv1.GetPostWithMetadataResponse], error) {
+	if req.Msg.GetPostId() == 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
+	}
+
+	postId := req.Msg.GetPostId()
+
+	// Fetch the appropriate post
+	post, err := c.postsRepo.GetPost(ctx, postId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("post not found: %w", err))
+	}
+
+	// Fetch engagement counts
+	postEngagements, err := c.postsRepo.SelectEngagementCounts(ctx, postId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("post engagements not found: %w", err))
+	}
+
+	resp := &postsv1.GetPostWithMetadataResponse{
+		Post:         post,
+		LikeCount:    postEngagements.LikeCount,
+		ShareCount:   postEngagements.ShareCount,
+		CommentCount: postEngagements.CommentCount,
+		RepostCount:  postEngagements.RepostCount,
+	}
+
+	return connect.NewResponse(resp), nil
 }
