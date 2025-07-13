@@ -284,24 +284,45 @@ func (c *PostController) IncrementPostLikes(
 }
 
 func (c *PostController) GetPostWithMetadata(ctx context.Context, req *connect.Request[postsv1.GetPostRequest]) (*connect.Response[postsv1.GetPostWithMetadataResponse], error) {
-	if req.Msg.GetPostId() == 0 {
+	postID := req.Msg.GetPostId()
+	if postID == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
 	}
 
-	postId := req.Msg.GetPostId()
+	var (
+		post            *postsv1.Post
+		postEngagements *postsv1.PostEngagements
+	)
 
-	// Fetch the appropriate post
-	post, err := c.postsRepo.GetPost(ctx, postId)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("post not found: %w", err))
+	// Create an errgroup with context
+	g, ctx := errgroup.WithContext(ctx)
+
+	// Fetch post concurrently
+	g.Go(func() error {
+		var err error
+		post, err = c.postsRepo.GetPost(ctx, postID)
+		if err != nil {
+			return connect.NewError(connect.CodeNotFound, fmt.Errorf("post not found: %w", err))
+		}
+		return nil
+	})
+
+	// Fetch engagements concurrently
+	g.Go(func() error {
+		var err error
+		postEngagements, err = c.postsRepo.SelectEngagementCounts(ctx, postID)
+		if err != nil {
+			return connect.NewError(connect.CodeNotFound, fmt.Errorf("post engagements not found: %w", err))
+		}
+		return nil
+	})
+
+	// Wait for both to complete or return early on error
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
-	// Fetch engagement counts
-	postEngagements, err := c.postsRepo.SelectEngagementCounts(ctx, postId)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("post engagements not found: %w", err))
-	}
-
+	// Build and return the response
 	resp := &postsv1.GetPostWithMetadataResponse{
 		Post:         post,
 		LikeCount:    postEngagements.LikeCount,
