@@ -304,6 +304,7 @@ func (c *PostController) GetPostWithMetadata(ctx context.Context, req *connect.R
 		if err != nil {
 			return connect.NewError(connect.CodeNotFound, fmt.Errorf("post not found: %w", err))
 		}
+
 		return nil
 	})
 
