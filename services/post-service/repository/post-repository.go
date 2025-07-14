@@ -69,6 +69,7 @@ func (r *PostRepository) GetPost(ctx context.Context, postId int64) (*postv1.Pos
 		createdAt time.Time
 	)
 
+	post.User = &userv1.User{} // Initialize User to avoid nil pointer dereference
 	err := r.session.
 		Query(query, postId).
 		WithContext(ctx).
@@ -181,7 +182,7 @@ func (r *PostRepository) InsertEngagementsCount(ctx context.Context, postId int6
 
 func (r *PostRepository) SelectEngagementCounts(ctx context.Context, postId int64) (*postv1.PostEngagements, error) {
 	query := `
-		SELECT like_count, share_count, comment_count, repost_count
+		SELECT like_count, share_count, comment_count
 		FROM threads_keyspace.post_engagements
 		WHERE post_id = ? LIMIT 1
 	`
@@ -192,7 +193,6 @@ func (r *PostRepository) SelectEngagementCounts(ctx context.Context, postId int6
 		&postEngagement.LikeCount,
 		&postEngagement.ShareCount,
 		&postEngagement.CommentCount,
-		&postEngagement.RepostCount,
 	); err != nil {
 		if err == gocql.ErrNotFound {
 			return &postv1.PostEngagements{

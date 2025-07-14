@@ -38,18 +38,17 @@ func main() {
 		postServiceUrl,
 	)
 
-	req := connect.NewRequest(&postsv1.CreateLikeRequest{
+	req := connect.NewRequest(&postsv1.GetPostRequest{
 		PostId: 145604212619759222,
-		UserId: 145452450504003190,
 	})
 
 	req.Header().Set("Authorization", "Bearer "+os.Getenv("ACCESS_TOKEN"))
 
-	res, err := postServiceClient.CreateLike(context.TODO(), req)
+	res, err := postServiceClient.GetPostWithMetadata(context.TODO(), req)
 	if err != nil {
-		slog.Error("failed to create post", "error", err)
+		slog.Error("failed to get post", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("like created", "post_id", res.Msg.Like.PostId)
+	slog.Info("post retrieved", "post_id", res.Msg)
 
 }
