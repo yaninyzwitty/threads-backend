@@ -116,3 +116,34 @@ CREATE TABLE IF NOT EXISTS threads_keyspace.likes_by_user (
   liked_at  TIMESTAMP,
   PRIMARY KEY ((user_id), post_id)
 ) WITH CLUSTERING ORDER BY (post_id ASC);
+
+
+CREATE TABLE threads_keyspace.comments_by_post (
+    post_id UUID,                    -- Partition key
+    comment_id UUID,                -- Unique identifier for the comment
+    content TEXT,
+    author_id UUID,
+    created_at TIMESTAMP,           -- Clustering column (sorted by time)
+    updated_at TIMESTAMP,
+    PRIMARY KEY (post_id, created_at)
+) WITH CLUSTERING ORDER BY (created_at ASC);
+
+
+CREATE TABLE threads_keyspace.comments_by_id (
+    comment_id UUID PRIMARY KEY,
+    post_id UUID,
+    content TEXT,
+    author_id UUID,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE threads_keyspace.comments_by_author (
+    author_id UUID,
+    created_at TIMESTAMP,
+    comment_id UUID,
+    post_id UUID,
+    content TEXT,
+    updated_at TIMESTAMP,
+    PRIMARY KEY (author_id, created_at)
+) WITH CLUSTERING ORDER BY (created_at DESC);

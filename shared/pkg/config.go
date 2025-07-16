@@ -10,6 +10,7 @@ import (
 type Config struct {
 	UserServer      UserServer      `yaml:"user-server"`
 	PostServer      PostServer      `yaml:"post-server"`
+	CommentServer   CommentServer   `yaml:"comment-server"`
 	Database        Database        `yaml:"database"`
 	ProcessorServer ProcessorServer `yaml:"processor-server"`
 	Queue           Queue           `yaml:"queue"`
@@ -20,6 +21,9 @@ type PostServer struct {
 }
 
 type ProcessorServer struct {
+	Port int `yaml:"port"`
+}
+type CommentServer struct {
 	Port int `yaml:"port"`
 }
 
