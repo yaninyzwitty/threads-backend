@@ -4,6 +4,8 @@ post-server:
   port: 50052
 processor-server:
   port: 50053
+comment-server:
+  port: 50054
 queue:
   brokers:
     - "kafka-gcp-europewest1.streaming.datastax.com:9093"

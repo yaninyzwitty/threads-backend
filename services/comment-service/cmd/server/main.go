@@ -12,10 +12,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/joho/godotenv"
-	"github.com/yaninyzwitty/threads-go-backend/gen/posts/v1/postsv1connect"
-	"github.com/yaninyzwitty/threads-go-backend/services/post-service/controller"
-	"github.com/yaninyzwitty/threads-go-backend/services/post-service/kafka"
-	"github.com/yaninyzwitty/threads-go-backend/services/post-service/repository"
+	"github.com/yaninyzwitty/threads-go-backend/gen/comment/v1/commentsv1connect"
+	"github.com/yaninyzwitty/threads-go-backend/services/comment-service/controller"
+	"github.com/yaninyzwitty/threads-go-backend/services/comment-service/repository"
 	"github.com/yaninyzwitty/threads-go-backend/services/user-service/auth"
 	"github.com/yaninyzwitty/threads-go-backend/shared/database"
 	"github.com/yaninyzwitty/threads-go-backend/shared/helpers"
@@ -27,6 +26,7 @@ import (
 )
 
 func main() {
+
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found")
 	}
@@ -69,22 +69,20 @@ func main() {
 	})
 	defer kafkaReader.Close()
 
-	postRepo := repository.NewPostRepository(dbSession)
-	postController := controller.NewPostController(postRepo)
-
-	postPath, postHandler := postsv1connect.NewPostServiceHandler(
-		postController,
+	commentsRepo := repository.NewCommentRepository(dbSession)
+	commentsController := controller.NewCommentController(commentsRepo)
+	commentsPath, commentsHandler := commentsv1connect.NewCommentServiceHandler(
+		commentsController,
 		connect.WithInterceptors(auth.AuthInterceptor()),
 	)
 
 	mux := http.NewServeMux()
-	mux.Handle(postPath, postHandler)
+	mux.Handle(commentsPath, commentsHandler)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.PostServer.Port),
+		Addr:    fmt.Sprintf(":%d", cfg.CommentServer.Port),
 		Handler: h2c.NewHandler(mux, &http2.Server{}),
 	}
-
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -102,9 +100,7 @@ func main() {
 		cancel()
 	}()
 
-	// Start Kafka consumer
-	kafka.StartKafkaConsumer(ctx, kafkaReader, postController)
-
+	// TODO-start kafka consumer here
 	slog.Info("starting ConnectRPC server", "address", server.Addr, "pid", os.Getpid())
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("server failed", "error", err)

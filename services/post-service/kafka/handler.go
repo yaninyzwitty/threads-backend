@@ -85,6 +85,10 @@ func StartKafkaConsumer(ctx context.Context, kafkaReader *kafka.Reader, postCont
 
 			return eg.Wait()
 		},
+		"comment.created": func(b []byte) error {
+			// TODO implement update for post_engagements table
+			return nil
+		},
 	}
 
 	go func() {

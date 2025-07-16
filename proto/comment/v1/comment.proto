@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package comments.v1;
+
+import "google/protobuf/timestamp.proto";
+import "posts/v1/post.proto";
+import "user/v1/user.proto";
+
+// The Comment message represents a user's comment on a post.
+message Comment {
+  int64 id = 1;
+  string content = 2;
+  user.v1.User author = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  posts.v1.Post post = 6; // The post this comment is associated with
+}
+
+// Request to create a new comment
+message CreateCommentRequest {
+  string content = 1;
+  int64 post_id = 2;
+  // int64 author_id = 3; // ID of the user creating the comment
+}
+
+// Response after creating a comment
+message CreateCommentResponse {
+  Comment comment = 1;
+}
+
+// Get a comment by ID
+message GetCommentRequest {
+  int64 id = 1;
+}
+
+message GetCommentResponse {
+  Comment comment = 1;
+}
+
+message HandleCommentsUpsertRequest {
+  Comment comment = 1;
+}
+
+message HandleCommentsUpsertResponse {
+  bool upserted = 1;
+}
+
+
+// gRPC Service definition
+service CommentService {
+  rpc CreateComment(CreateCommentRequest) returns (CreateCommentResponse);
+  rpc GetComment(GetCommentRequest) returns (GetCommentResponse);
+  rpc HandleCommentsUpsert(HandleCommentsUpsertRequest) returns (HandleCommentsUpsertResponse);  // upserts data to the denormalized tables (comments_by_author, comments_by_id)
+}
